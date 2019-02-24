@@ -96,7 +96,7 @@ namespace Molten.Graphics
 
                 // TODO update this once the renderer supports running render steps in deferred context threads.
                 // TODO also consider spawning extra chain contexts so they can individually 
-                _step.Render(renderer, camera, context, time);
+                _step.Render(renderer.Device, renderer, camera, context, time);
                 _completed = true;
 
                 // Start the next steps

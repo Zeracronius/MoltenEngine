@@ -22,6 +22,7 @@ namespace Molten.Graphics
 
             if (mat == null)
             {
+                int[] test;
                 // Use whichever default one fits the current configuration.
                 if (normal == null)
                     mat = renderer.StandardMeshMaterial_NoNormalMap;

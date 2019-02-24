@@ -43,31 +43,29 @@ namespace Molten.Graphics
             _sphereMesh.Dispose();
         }
 
-        internal override void Render(RendererDX11 renderer, RenderCamera camera, RenderChain.Context context, Timing time)
+        internal override void Render(PipeDX11 pipe, RendererDX11 renderer, RenderCamera camera, RenderChain.Context context, Timing time)
         {
             // No skybox texture or we're not on the first layer.
             if (context.Scene.SkyboxTexture == null || context.Scene.Layers.First() != context.Layer)
                 return;
 
             Rectangle bounds = camera.OutputSurface.Viewport.Bounds;
-            DeviceDX11 device = renderer.Device;
-
             _sphereMesh.SetResource(context.Scene.SkyboxTexture, 0);
 
             // We want to add to the previous composition, rather than completely overwrite it.
             RenderSurface destSurface = context.HasComposed ? context.PreviousComposition : _surfaceScene;
 
-            device.UnsetRenderSurfaces();
-            device.SetRenderSurface(destSurface, 0);
-            device.DepthSurface = _surfaceDepth;
-            device.DepthWriteOverride = GraphicsDepthWritePermission.Enabled;
-            device.Rasterizer.SetViewports(camera.OutputSurface.Viewport);
-            device.Rasterizer.SetScissorRectangle(bounds);
+            pipe.UnsetRenderSurfaces();
+            pipe.SetRenderSurface(destSurface, 0);
+            pipe.DepthSurface = _surfaceDepth;
+            pipe.DepthWriteOverride = GraphicsDepthWritePermission.Enabled;
+            pipe.Rasterizer.SetViewports(camera.OutputSurface.Viewport);
+            pipe.Rasterizer.SetScissorRectangle(bounds);
 
-            renderer.Device.BeginDraw(StateConditions.None); // TODO correctly use pipe + conditions here.
+            pipe.BeginDraw(StateConditions.None); // TODO correctly use pipe + conditions here.
             _skyboxData.RenderTransform = Matrix4F.Scaling(camera.MaxDrawDistance) * Matrix4F.CreateTranslation(camera.Position);
-            _sphereMesh.Render(device, renderer, camera, _skyboxData);
-            renderer.Device.EndDraw();
+            _sphereMesh.Render(pipe, renderer, camera, _skyboxData);
+            pipe.EndDraw();
         }
 
         private void MakeSphere(int LatLines, int LongLines, out Vertex[] vertices, out int[] indices)

@@ -26,25 +26,23 @@ namespace Molten.Graphics
 
         public override void Dispose() { }
 
-        internal override void Render(RendererDX11 renderer, RenderCamera camera, RenderChain.Context context, Timing time)
+        internal override void Render(PipeDX11 pipe, RendererDX11 renderer, RenderCamera camera, RenderChain.Context context, Timing time)
         {
-            DeviceDX11 device = renderer.Device;
-
-            device.SetRenderSurface(_surfaceScene, 0);
-            device.SetRenderSurface(_surfaceNormals, 1);
-            device.SetRenderSurface(_surfaceEmissive, 2);
-            device.DepthSurface = _surfaceDepth;
+            pipe.SetRenderSurface(_surfaceScene, 0);
+            pipe.SetRenderSurface(_surfaceNormals, 1);
+            pipe.SetRenderSurface(_surfaceEmissive, 2);
+            pipe.DepthSurface = _surfaceDepth;
 
             SetMaterialCommon(renderer.StandardMeshMaterial, camera, _surfaceScene);
             SetMaterialCommon(renderer.StandardMeshMaterial_NoNormalMap, camera, _surfaceScene);
 
-            device.Rasterizer.SetViewports(camera.OutputSurface.Viewport);
+            pipe.Rasterizer.SetViewports(camera.OutputSurface.Viewport);
             StateConditions conditions = StateConditions.None; // TODO expand
             conditions |= camera.OutputSurface.SampleCount > 1 ? StateConditions.Multisampling : StateConditions.None;
 
-            device.BeginDraw(conditions);
-            renderer.RenderSceneLayer(device, context.Layer, camera);
-            device.EndDraw();
+            pipe.BeginDraw(conditions);
+            renderer.RenderSceneLayer(pipe, context.Layer, camera);
+            pipe.EndDraw();
         }
 
         private void SetMaterialCommon(Material material, RenderCamera camera, RenderSurface gBufferScene)

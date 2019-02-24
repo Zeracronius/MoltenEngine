@@ -26,19 +26,17 @@ namespace Molten.Graphics
 
         public override void Dispose() { }
 
-        internal override void Render(RendererDX11 renderer, RenderCamera camera, RenderChain.Context context, Timing time)
+        internal override void Render(PipeDX11 pipe, RendererDX11 renderer, RenderCamera camera, RenderChain.Context context, Timing time)
         {
-            DeviceDX11 device = renderer.Device;
-
-            device.SetRenderSurfaces(null);
-            bool newSurface = renderer.ClearIfFirstUse(device, _surfaceScene, context.Scene.BackgroundColor);
-            renderer.ClearIfFirstUse(device, _surfaceNormals, Color.White * 0.5f);
-            renderer.ClearIfFirstUse(device, _surfaceEmissive, Color.Black);
+            pipe.SetRenderSurfaces(null);
+            bool newSurface = renderer.ClearIfFirstUse(pipe, _surfaceScene, context.Scene.BackgroundColor);
+            renderer.ClearIfFirstUse(pipe, _surfaceNormals, Color.White * 0.5f);
+            renderer.ClearIfFirstUse(pipe, _surfaceEmissive, Color.Black);
 
             // Always clear the depth surface at the start of each scene unless otherwise instructed.
             // Will also be cleared if we've just switched to a previously un-rendered surface during this frame.
             if(!camera.Flags.HasFlag(RenderCameraFlags.DoNotClearDepth) || newSurface)
-                _surfaceDepth.Clear(device, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil);
+                _surfaceDepth.Clear(pipe, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil);
         }
     }
 }

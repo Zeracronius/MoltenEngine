@@ -25,22 +25,21 @@ namespace Molten.Graphics
         public override void Dispose()
         { }
 
-        internal override void Render(RendererDX11 renderer, RenderCamera camera, RenderChain.Context context, Timing time)
+        internal override void Render(PipeDX11 pipe, RendererDX11 renderer, RenderCamera camera, RenderChain.Context context, Timing time)
         {
-            DeviceDX11 device = renderer.Device;
             _surfaceScene.Clear(Color.Transparent);
 
-            device.SetRenderSurface(_surfaceScene, 0);
-            device.DepthSurface = _surfaceDepth;
-            device.Rasterizer.SetViewports(camera.OutputSurface.Viewport);
-            device.Rasterizer.SetScissorRectangle(camera.OutputSurface.Viewport.Bounds);
+            pipe.SetRenderSurface(_surfaceScene, 0);
+            pipe.DepthSurface = _surfaceDepth;
+            pipe.Rasterizer.SetViewports(camera.OutputSurface.Viewport);
+            pipe.Rasterizer.SetScissorRectangle(camera.OutputSurface.Viewport.Bounds);
 
             StateConditions conditions = StateConditions.ScissorTest; // TODO expand
             conditions |= camera.OutputSurface.SampleCount > 1 ? StateConditions.Multisampling : StateConditions.None;
 
-            device.BeginDraw(conditions);
-            renderer.RenderSceneLayer(device, context.Layer, camera);
-            device.EndDraw();
+            pipe.BeginDraw(conditions);
+            renderer.RenderSceneLayer(pipe, context.Layer, camera);
+            pipe.EndDraw();
         }
     }
 }

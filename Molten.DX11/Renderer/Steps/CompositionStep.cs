@@ -25,9 +25,8 @@ namespace Molten.Graphics
             _surfaceLighting = renderer.GetSurface<RenderSurface>(MainSurfaceType.Lighting);
             _surfaceEmissive = renderer.GetSurface<RenderSurface>(MainSurfaceType.Emissive);
 
-            string namepace = "Molten.Graphics.Assets.gbuffer_compose.mfx";
-
-            ShaderCompileResult result = renderer.ShaderCompiler.CompileEmbedded("Molten.Graphics.Assets.gbuffer_compose.mfx");
+            string nsCompose = "Molten.Graphics.Assets.gbuffer_compose.mfx";
+            ShaderCompileResult result = renderer.ShaderCompiler.CompileEmbedded(nsCompose);
             _matCompose = result["material", "gbuffer-compose"] as Material;
 
             _valLighting = _matCompose["mapLighting"];
@@ -42,20 +41,18 @@ namespace Molten.Graphics
             _matCompose.Dispose();
         }
 
-        internal override void Render(RendererDX11 renderer, RenderCamera camera, RenderChain.Context context, Timing time)
+        internal override void Render(PipeDX11 pipe, RendererDX11 renderer, RenderCamera camera, RenderChain.Context context, Timing time)
         {
             _orthoCamera.OutputSurface = camera.OutputSurface;
-
             Rectangle bounds = camera.OutputSurface.Viewport.Bounds;
-            DeviceDX11 device = renderer.Device;
-
             context.CompositionSurface.Clear(context.Scene.BackgroundColor);
-            device.UnsetRenderSurfaces();
-            device.SetRenderSurface(context.CompositionSurface, 0);
-            device.DepthSurface = null;
-            device.DepthWriteOverride = GraphicsDepthWritePermission.Disabled;
-            device.Rasterizer.SetViewports(camera.OutputSurface.Viewport);
-            device.Rasterizer.SetScissorRectangle(bounds);
+
+            pipe.UnsetRenderSurfaces();
+            pipe.SetRenderSurface(context.CompositionSurface, 0);
+            pipe.DepthSurface = null;
+            pipe.DepthWriteOverride = GraphicsDepthWritePermission.Disabled;
+            pipe.Rasterizer.SetViewports(camera.OutputSurface.Viewport);
+            pipe.Rasterizer.SetScissorRectangle(bounds);
 
             StateConditions conditions = StateConditions.ScissorTest;
             conditions |= camera.OutputSurface.SampleCount > 1 ? StateConditions.Multisampling : StateConditions.None;
@@ -65,10 +62,10 @@ namespace Molten.Graphics
 
             ITexture2D sourceSurface = context.HasComposed ? context.PreviousComposition : _surfaceScene;
 
-            renderer.Device.BeginDraw(conditions); // TODO correctly use pipe + conditions here.
-            renderer.SpriteBatcher.Draw(sourceSurface, bounds, Vector2F.Zero, bounds.Size, Color.White, 0, Vector2F.Zero, _matCompose, 0);
-            renderer.SpriteBatcher.Flush(device, _orthoCamera, _dummyData);
-            renderer.Device.EndDraw();
+            pipe.BeginDraw(conditions); // TODO correctly use pipe + conditions here.
+            pipe.SpriteBatcher.Draw(sourceSurface, bounds, Vector2F.Zero, bounds.Size, Color.White, 0, Vector2F.Zero, _matCompose, 0);
+            pipe.SpriteBatcher.Flush(pipe, _orthoCamera, _dummyData);
+            pipe.EndDraw();
 
             context.SwapComposition();
         }

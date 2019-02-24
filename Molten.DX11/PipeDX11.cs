@@ -419,6 +419,7 @@ namespace Molten.Graphics
         /// <summary>Dispoes of the current <see cref="PipeDX11"/> instance.</summary>
         protected override void OnDispose()
         {
+            SpriteBatcher?.Dispose();
             DisposeObject(ref _output);
             DisposeObject(ref _input);
             DisposeObject(ref _computeStage);
@@ -499,5 +500,7 @@ namespace Molten.Graphics
         internal GraphicsDepthWritePermission DepthWriteOverride { get; set; } = GraphicsDepthWritePermission.Enabled;
 
         internal GraphicsDepthWritePermission DepthWritePermission => _output.DepthWritePermission;
+
+        internal SpriteBatcherDX11 SpriteBatcher { get; set; }
     }
 }

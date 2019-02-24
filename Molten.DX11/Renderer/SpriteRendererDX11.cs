@@ -17,8 +17,8 @@ namespace Molten.Graphics
 
         private protected override void OnRender(PipeDX11 pipe, RendererDX11 renderer, RenderCamera camera, ObjectRenderData data)
         {
-            Callback?.Invoke(renderer.SpriteBatcher);
-            renderer.SpriteBatcher.Flush(pipe, camera, data);
+            Callback?.Invoke(pipe.SpriteBatcher);
+            pipe.SpriteBatcher.Flush(pipe, camera, data);
         }
     }
 }

@@ -25,8 +25,6 @@ namespace Molten.Graphics
         ThreadedDictionary<MainSurfaceType, SurfaceConfig> _mainSurfaces;
         DepthStencilSurface _depthSurface;
 
-        internal SpriteBatcherDX11 SpriteBatcher;
-
         internal GraphicsBuffer StaticVertexBuffer;
         internal GraphicsBuffer DynamicVertexBuffer;
         internal StagingBuffer StagingBuffer;
@@ -62,7 +60,7 @@ namespace Molten.Graphics
             DynamicVertexBuffer = new GraphicsBuffer(Device, BufferMode.DynamicRing, BindFlags.VertexBuffer | BindFlags.IndexBuffer, maxBufferSize);
 
             StagingBuffer = new StagingBuffer(Device, StagingBufferFlags.Write, maxBufferSize);
-            SpriteBatcher = new SpriteBatcherDX11(this, 3000);
+            Device.SpriteBatcher = new SpriteBatcherDX11(this, 3000);
 
             InitializeMainSurfaces(BiggestWidth, BiggestHeight);
             LoadDefaultShaders();
@@ -243,7 +241,6 @@ namespace Molten.Graphics
 
             _resourceManager.Dispose();
             _displayManager?.Dispose();
-            SpriteBatcher.Dispose();
 
             StaticVertexBuffer.Dispose();
             DynamicVertexBuffer.Dispose();

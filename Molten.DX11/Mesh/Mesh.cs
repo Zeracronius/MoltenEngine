@@ -62,7 +62,7 @@ namespace Molten.Graphics
             _material.Object.Wvp.Value = Matrix4F.Multiply(data.RenderTransform, camera.ViewProjection);
             _material.Object.World.Value = data.RenderTransform;
 
-            renderer.Device.Draw(_material, _vertexCount, _topology);
+            pipe.Draw(_material, _vertexCount, _topology);
 
             /* TODO: According to: https://www.gamedev.net/forums/topic/667328-vertices-and-indices-in-the-same-buffer/
             *  - A buffer can be bound as both a vertex and index buffer

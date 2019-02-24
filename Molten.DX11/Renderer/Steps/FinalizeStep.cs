@@ -27,22 +27,21 @@ namespace Molten.Graphics
 
         }
 
-        internal override void Render(RendererDX11 renderer, RenderCamera camera, RenderChain.Context context, Timing time)
+        internal override void Render(PipeDX11 pipe, RendererDX11 renderer, RenderCamera camera, RenderChain.Context context, Timing time)
         {
             _orthoCamera.OutputSurface = camera.OutputSurface;
 
             Rectangle bounds = new Rectangle(0, 0, camera.OutputSurface.Width, camera.OutputSurface.Height);
-            DeviceDX11 device = renderer.Device;
             RenderSurface finalSurface = camera.OutputSurface as RenderSurface;
             if (!camera.HasFlags(RenderCameraFlags.DoNotClear))
-                renderer.ClearIfFirstUse(device, finalSurface, context.Scene.BackgroundColor);
+                renderer.ClearIfFirstUse(pipe, finalSurface, context.Scene.BackgroundColor);
 
-            device.SetRenderSurfaces(null);
-            device.SetRenderSurface(finalSurface, 0);
-            device.DepthSurface = null;
-            device.DepthWriteOverride = GraphicsDepthWritePermission.Disabled;
-            device.Rasterizer.SetViewports(camera.OutputSurface.Viewport);
-            device.Rasterizer.SetScissorRectangle(camera.OutputSurface.Viewport.Bounds);
+            pipe.SetRenderSurfaces(null);
+            pipe.SetRenderSurface(finalSurface, 0);
+            pipe.DepthSurface = null;
+            pipe.DepthWriteOverride = GraphicsDepthWritePermission.Disabled;
+            pipe.Rasterizer.SetViewports(camera.OutputSurface.Viewport);
+            pipe.Rasterizer.SetScissorRectangle(camera.OutputSurface.Viewport.Bounds);
 
             StateConditions conditions = StateConditions.ScissorTest;
             conditions |= camera.OutputSurface.SampleCount > 1 ? StateConditions.Multisampling : StateConditions.None;
@@ -50,12 +49,12 @@ namespace Molten.Graphics
             renderer.Device.BeginDraw(conditions); // TODO correctly use pipe + conditions here.
 
             ITexture2D sourceSurface = context.HasComposed ? context.PreviousComposition : _surfaceScene;
-            renderer.SpriteBatcher.Draw(sourceSurface, bounds, Vector2F.Zero, camera.OutputSurface.Viewport.Bounds.Size, Color.White, 0, Vector2F.Zero, null, 0);
+            pipe.SpriteBatcher.Draw(sourceSurface, bounds, Vector2F.Zero, camera.OutputSurface.Viewport.Bounds.Size, Color.White, 0, Vector2F.Zero, null, 0);
 
             if (camera.HasFlags(RenderCameraFlags.ShowOverlay))
-                renderer.Overlay.Render(time, renderer.SpriteBatcher, renderer.Profiler, context.Scene.Profiler, camera);
+                renderer.Overlay.Render(time, pipe.SpriteBatcher, renderer.Profiler, context.Scene.Profiler, camera);
 
-            renderer.SpriteBatcher.Flush(device, _orthoCamera, _dummyData);
+            pipe.SpriteBatcher.Flush(pipe, _orthoCamera, _dummyData);
             renderer.Device.EndDraw();
         }
     }
