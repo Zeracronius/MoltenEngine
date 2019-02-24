@@ -249,7 +249,6 @@
     <Compile Include="Surfaces\RenderFormSurface.cs" />
     <Compile Include="Surfaces\RenderSurface.cs" />
     <Compile Include="Surfaces\SwapChainSurface.cs" />
-    <Compile Include="Textures\BmpTextureWriter.cs" />
     <Compile Include="Textures\Changes\ITextureChange.cs" />
     <Compile Include="Textures\Changes\SurfaceClearChange.cs" />
     <Compile Include="Textures\Changes\TextureCopyLevel.cs" />
@@ -259,9 +258,6 @@
     <Compile Include="Textures\Changes\TextureGet.cs" />
     <Compile Include="Textures\Changes\TextureResize.cs" />
     <Compile Include="Textures\Changes\TextureSet.cs" />
-    <Compile Include="Textures\DefaultTextureReader.cs" />
-    <Compile Include="Textures\JpegTextureWriter.cs" />
-    <Compile Include="Textures\PngTextureWriter.cs" />
     <Compile Include="Textures\Texture1DDX11.cs" />
     <Compile Include="Textures\Texture2DDX11.cs" />
     <Compile Include="Textures\TextureCubeDX11.cs" />
