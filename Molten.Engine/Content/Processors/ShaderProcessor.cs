@@ -20,6 +20,7 @@ namespace Molten.Content
                 using (StreamReader reader = new StreamReader(stream, Encoding.UTF8, true, 2048, true))
                 {
                     string source = reader.ReadToEnd();
+
                     ShaderCompileResult r = context.Engine.Renderer.Resources.CompileShaders(source, context.Filename);
                     foreach (string group in r.ShaderGroups.Keys)
                     {

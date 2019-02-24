@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Molten.Graphics
 {
-    public interface IShader
+    public interface IShader : IDisposable
     {
         /// <summary>Gets the name of the material.</summary>
         string Name { get; }

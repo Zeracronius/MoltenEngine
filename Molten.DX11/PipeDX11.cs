@@ -93,7 +93,7 @@ namespace Molten.Graphics
 
         /// <summary>Sets a list of render surfaces.</summary>
         /// <param name="surfaces">Array containing a list of render surfaces to be set.</param>
-        public void SetRenderSurfaces(params RenderSurface[] surfaces)
+        public void SetRenderSurfaces(RenderSurface[] surfaces)
         {
             if (surfaces == null)
                 _output.SetRenderSurfaces(null, 0);

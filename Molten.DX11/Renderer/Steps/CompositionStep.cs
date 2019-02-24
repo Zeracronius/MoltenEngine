@@ -15,7 +15,7 @@ namespace Molten.Graphics
         RenderSurface _surfaceScene;
         RenderSurface _surfaceLighting;
         RenderSurface _surfaceEmissive;
-        Material _matCompose;
+        IMaterial _matCompose;
         IShaderValue _valLighting;
         IShaderValue _valEmissive;
 

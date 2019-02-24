@@ -11,7 +11,6 @@ namespace Molten.Graphics
     {
         RenderCamera _orthoCamera;
         ObjectRenderData _dummyData;
-
         RenderSurface _surfaceScene;
 
         internal override void Initialize(RendererDX11 renderer)

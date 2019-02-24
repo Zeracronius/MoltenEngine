@@ -16,9 +16,6 @@ namespace Molten.Graphics
         Texture2DDescription _description;
         int _cubeCount;
 
-        public event TextureHandler OnPreResize;
-        public event TextureHandler OnPostResize;
-
         internal TextureCubeDX11(RendererDX11 renderer, int width,
             int height, Format format = SharpDX.DXGI.Format.R8G8B8A8_UNorm, int mipCount = 1, int cubeCount = 1, TextureFlags flags = TextureFlags.None)
             : base(renderer, width, height, 1, mipCount, 6, 1, format, flags)
