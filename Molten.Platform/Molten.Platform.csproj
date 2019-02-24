@@ -74,6 +74,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Graphics\Overlays\RenderProfilerOverlay.cs" />
+    <Compile Include="Graphics\Shaders\DummyShaderValue.cs" />
+    <Compile Include="Graphics\Shaders\Materials\Properties\CommonShaderProperties.cs" />
+    <Compile Include="Graphics\Shaders\Materials\Properties\GBufferTextureProperties.cs" />
+    <Compile Include="Graphics\Shaders\Materials\Properties\LightMaterialProperties.cs" />
+    <Compile Include="Graphics\Shaders\Materials\Properties\ObjectMaterialProperties.cs" />
+    <Compile Include="Graphics\Shaders\Materials\Properties\SceneMaterialProperties.cs" />
+    <Compile Include="Graphics\Shaders\Materials\Properties\SpriteBatchMaterialProperties.cs" />
     <Compile Include="Graphics\SpriteBatch\GraphRenderer.cs" />
     <Compile Include="Graphics\Overlays\IRenderOverlay.cs" />
     <Compile Include="Gamepad\GamepadButtonFlags.cs" />

@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 
 namespace Molten.Graphics
 {
-    internal class ObjectMaterialProperties : CommonShaderProperties
+    public class ObjectMaterialProperties : CommonShaderProperties
     {
-        internal IShaderValue World { get; set; }
+        public IShaderValue World { get; }
 
-        internal IShaderValue Wvp { get; set; }
+        public IShaderValue Wvp { get; }
 
-        internal IShaderValue EmissivePower { get; set; }
+        public IShaderValue EmissivePower { get; }
 
-        internal ObjectMaterialProperties(Material material) : base(material)
+        public ObjectMaterialProperties(IMaterial material) : base(material)
         {
             World = MapValue(material, "world");
             Wvp = MapValue(material, "wvp");

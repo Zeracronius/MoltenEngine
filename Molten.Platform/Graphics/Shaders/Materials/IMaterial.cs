@@ -33,5 +33,14 @@ namespace Molten.Graphics
         /// </value>
         int PassCount { get; }
 
+        ObjectMaterialProperties Object { get; }
+
+        LightMaterialProperties Light { get; }
+
+        SceneMaterialProperties Scene { get;  }
+
+        GBufferTextureProperties Textures { get;  }
+
+        SpriteBatchMaterialProperties SpriteBatch { get; }
     }
 }

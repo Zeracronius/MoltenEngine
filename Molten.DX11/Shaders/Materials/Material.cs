@@ -73,14 +73,14 @@ namespace Molten.Graphics
             return _passesByName[name];
         }
 
-        internal ObjectMaterialProperties Object { get; set; }
+        public ObjectMaterialProperties Object { get; set; }
 
-        internal LightMaterialProperties Light { get; set; }
+        public LightMaterialProperties Light { get; set; }
 
-        internal SceneMaterialProperties Scene { get; set; }
+        public SceneMaterialProperties Scene { get; set; }
 
-        internal GBufferTextureProperties Textures { get; set; }
+        public GBufferTextureProperties Textures { get; set; }
 
-        internal SpriteBatchMaterialProperties SpriteBatch { get; set; }
+        public SpriteBatchMaterialProperties SpriteBatch { get; set; }
     }
 }

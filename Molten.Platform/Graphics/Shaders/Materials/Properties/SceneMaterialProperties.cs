@@ -6,19 +6,19 @@ using System.Threading.Tasks;
 
 namespace Molten.Graphics
 {
-    internal class SceneMaterialProperties : CommonShaderProperties
+    public class SceneMaterialProperties : CommonShaderProperties
     {
-        internal IShaderValue View { get; private set; }
+        public IShaderValue View { get; private set; }
 
-        internal IShaderValue Projection { get; private set; }
+        public IShaderValue Projection { get; private set; }
 
-        internal IShaderValue ViewProjection { get; private set; }
+        public IShaderValue ViewProjection { get; private set; }
 
-        internal IShaderValue InvViewProjection { get; private set; }
+        public IShaderValue InvViewProjection { get; private set; }
 
-        internal IShaderValue MaxSurfaceUV { get; private set; }
+        public IShaderValue MaxSurfaceUV { get; private set; }
 
-        internal SceneMaterialProperties(Material material) : base(material)
+        public SceneMaterialProperties(IMaterial material) : base(material)
         {
             View = MapValue(material, "view");
             Projection = MapValue(material, "projection");

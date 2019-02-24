@@ -9,11 +9,11 @@ namespace Molten.Graphics
     /// <summary>
     /// A helper class for storing references to common shader properties, or filling missing ones in with dummy properties.
     /// </summary>
-    internal abstract class CommonShaderProperties
+    public abstract class CommonShaderProperties
     {
-        internal CommonShaderProperties(HlslShader shader) { }
+        internal CommonShaderProperties(IShader shader) { }
 
-        protected IShaderValue MapValue(HlslShader shader, string name)
+        protected IShaderValue MapValue(IShader shader, string name)
         {
             return shader[name] ?? new DummyShaderValue();
         }

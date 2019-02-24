@@ -6,21 +6,21 @@ using System.Threading.Tasks;
 
 namespace Molten.Graphics
 {
-    internal class LightMaterialProperties : CommonShaderProperties
+    public class LightMaterialProperties : CommonShaderProperties
     {
-        internal IShaderValue Data { get; set; }
+        public IShaderValue Data { get;  }
 
-        internal IShaderValue MapDiffuse { get; set; }
+        public IShaderValue MapDiffuse { get; }
 
-        internal IShaderValue MapNormal { get; set; }
+        public IShaderValue MapNormal { get; }
 
-        internal IShaderValue MapDepth { get; set; }
+        public IShaderValue MapDepth { get; }
 
-        internal IShaderValue InvViewProjection { get; set; }
+        public IShaderValue InvViewProjection { get; }
 
-        internal IShaderValue CameraPosition { get; set; }
+        public IShaderValue CameraPosition { get; }
 
-        internal LightMaterialProperties(Material material) : base(material)
+        public LightMaterialProperties(IMaterial material) : base(material)
         {
             Data = MapValue(material, "LightData");
             MapDiffuse = MapValue(material, "mapDiffuse");
