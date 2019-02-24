@@ -97,7 +97,7 @@ namespace Molten.Samples
         private void SetupLightObjects(Vector3F origin)
         {
             int numLights = 5;
-            float radius = 5.5f;
+            float radius = 8.5f;
 
             float angInc = MathHelper.DegreesToRadians(360.0f / numLights);
             float angle = 0;
@@ -117,9 +117,9 @@ namespace Molten.Samples
                 lightCom.Intensity = 2.0f;
                 lightCom.Color = new Color()
                 {
-                    R = (byte)Rng.Next(128, 255),
-                    G = (byte)Rng.Next(128, 255),
-                    B = (byte)Rng.Next(128, 255),
+                    R = (byte)Rng.Next(90, 255),
+                    G = (byte)Rng.Next(90, 255),
+                    B = (byte)Rng.Next(90, 255),
                 };
                 angle += angInc;
             }

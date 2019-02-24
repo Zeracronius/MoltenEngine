@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using SharpDX.DXGI;
+using SharpDX.D3DCompiler;
 
 namespace Molten.Graphics
 {
@@ -64,6 +65,24 @@ namespace Molten.Graphics
 
             InitializeMainSurfaces(BiggestWidth, BiggestHeight);
             LoadDefaultShaders();
+        }
+
+        /// <summary>Compiels a set of shaders from the provided source string.</summary>
+        /// <param name="source">The source code to be parsed and compiled.</param>
+        /// <param name="filename">The name of the source file. Used as a point of reference in debug/error messages only.</param>
+        /// <returns></returns>
+        protected override ShaderCompileResult OnCompileShader(in string source, in string filename = null)
+        {
+            Include includer = null;
+
+            if (!string.IsNullOrWhiteSpace(filename))
+            {
+                FileInfo fInfo = new FileInfo(filename);
+                DirectoryInfo dir = fInfo.Directory;
+                includer = new HlslIncludeHandler(dir.ToString());
+            }
+
+            return ShaderCompiler.Compile(source, filename, includer);
         }
 
         private void LoadDefaultShaders()

@@ -286,6 +286,17 @@ namespace Molten.Graphics
 
         protected abstract void OnPostRenderCamera(SceneRenderData sceneData, RenderCamera camera, Timing time);
 
+        /// <summary>Compiles a set of shaders from the provided source string.</summary>
+        /// <param name="source">The source code to be parsed and compiled.</param>
+        /// <param name="filename">The name of the source file. Used as a point of reference in debug/error messages only.</param>
+        /// <returns></returns>
+        public ShaderCompileResult CompileShader(string source, string filename = null)
+        {
+            return OnCompileShader(in source, in filename);
+        }
+
+        protected abstract ShaderCompileResult OnCompileShader(in string source, in string filename);
+
         /// <summary>
         /// Occurs after render presentation is completed and profiler timing has been finalized for the current frame. Useful if you need to do some per-frame cleanup/resetting.
         /// </summary>

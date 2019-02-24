@@ -75,6 +75,11 @@ namespace Molten.Graphics
             throw new NotImplementedException();
         }
 
+        protected override ShaderCompileResult OnCompileShader(in string source, in string filename)
+        {
+            throw new NotImplementedException();
+        }
+
         public string Namer => null;
 
         public override IComputeManager Compute => null;

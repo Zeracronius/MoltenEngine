@@ -21,7 +21,7 @@ namespace Molten.Content
                 {
                     string source = reader.ReadToEnd();
 
-                    ShaderCompileResult r = context.Engine.Renderer.Resources.CompileShaders(source, context.Filename);
+                    ShaderCompileResult r = context.Engine.Renderer.CompileShader(source, context.Filename);
                     foreach (string group in r.ShaderGroups.Keys)
                     {
                         List<IShader> list = r.ShaderGroups[group];

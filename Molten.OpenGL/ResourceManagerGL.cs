@@ -16,11 +16,6 @@ namespace Molten.Graphics
             _renderer = renderer;
         }
 
-        public ShaderCompileResult CompileShaders(string source, string filename = null)
-        {
-            throw new NotImplementedException();
-        }
-
         public IWindowSurface CreateControlSurface(string formTitle, int mipCount = 1, int sampleCount = 1)
         {
             throw new NotImplementedException();

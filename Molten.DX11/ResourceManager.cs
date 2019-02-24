@@ -1,11 +1,6 @@
-﻿using SharpDX.D3DCompiler;
-using SharpDX.DXGI;
+﻿using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Molten.Graphics
 {
@@ -202,24 +197,6 @@ namespace Molten.Graphics
             where T : struct, IVertexType
         {
             return new IndexedMesh<T>(_renderer, maxVertices, maxIndices, topology, indexFormat, dynamic);
-        }
-
-        /// <summary>Compiels a set of shaders from the provided source string.</summary>
-        /// <param name="source">The source code to be parsed and compiled.</param>
-        /// <param name="filename">The name of the source file. Used as a point of reference in debug/error messages only.</param>
-        /// <returns></returns>
-        public ShaderCompileResult CompileShaders(string source, string filename = null)
-        {
-            Include includer = null;
-
-            if (!string.IsNullOrWhiteSpace(filename))
-            {
-                FileInfo fInfo = new FileInfo(filename);
-                DirectoryInfo dir = fInfo.Directory;
-                includer = new HlslIncludeHandler(dir.ToString());
-            }
-
-            return _renderer.ShaderCompiler.Compile(source, filename, includer);
         }
     }
 }
