@@ -1,5 +1,6 @@
 ﻿using Molten.Collections;
 using Molten.Graphics.Overlays;
+using SharpShader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,7 @@ namespace Molten.Graphics
         bool _surfaceResizeRequired;
         AntiAliasMode _requestedMultiSampleLevel = AntiAliasMode.None;
         internal AntiAliasMode MsaaLevel = AntiAliasMode.None;
+        Translator _shaderTranslator;
 
         /// <summary>
         /// Creates a new instance of a <see cref="MoltenRenderer"/> sub-type.
@@ -59,6 +61,7 @@ namespace Molten.Graphics
             settings.Log(Log, "Graphics");
             MsaaLevel = _requestedMultiSampleLevel = MsaaLevel;
             settings.MSAA.OnChanged += MSAA_OnChanged;
+            _shaderTranslator = new Translator("MoltenShaderCompiler");
 
             OnInitialize(settings);
         }
@@ -287,12 +290,25 @@ namespace Molten.Graphics
         protected abstract void OnPostRenderCamera(SceneRenderData sceneData, RenderCamera camera, Timing time);
 
         /// <summary>Compiles a set of shaders from the provided source string.</summary>
-        /// <param name="source">The source code to be parsed and compiled.</param>
+        /// <param name="cSharpSource">The source code to be parsed and compiled.</param>
         /// <param name="filename">The name of the source file. Used as a point of reference in debug/error messages only.</param>
         /// <returns></returns>
-        public ShaderCompileResult CompileShader(string source, string filename = null)
+        public ShaderCompileResult CompileShader(string cSharpSource, string filename = null)
         {
-            return OnCompileShader(in source, in filename);
+            TranslationResult result = _shaderTranslator.Translate(filename, cSharpSource, ShaderLanguage);
+            string shaderSource;
+
+            // TODO we need to separate the XML definitions from the actual shader source.
+            // TODO may need to update mfx format so that the XML is in summaries
+            /// <chicken>This seems valid</chicken>
+
+            if (result.Output.Count > 0)
+            {
+                shaderSource = result.Output.Values.First().SourceCode;
+                return OnCompileShader(in shaderSource, in filename);
+            }
+
+            return new ShaderCompileResult();
         }
 
         protected abstract ShaderCompileResult OnCompileShader(in string source, in string filename);
@@ -305,13 +321,14 @@ namespace Molten.Graphics
 
         public void Dispose()
         {
+            OnDispose();
+            _shaderTranslator.Dispose();
             OutputSurfaces.For(0, 1, (index, surface) =>
             {
                 surface.Dispose();
                 return false;
             });
 
-            OnDispose();
             Log.Dispose();
         }
 
@@ -345,6 +362,8 @@ namespace Molten.Graphics
         /// Gets the name of the renderer implementation.
         /// </summary>
         public abstract string Name { get; }
+
+        protected abstract OutputLanguage ShaderLanguage { get; }
 
         /// <summary>
         /// Gets a list of all the output <see cref="ISwapChainSurface"/> instances attached to the renderer. These are automatically presented to the graphics device by the renderer, if active.

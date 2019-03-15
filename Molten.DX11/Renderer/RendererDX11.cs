@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.IO;
 using SharpDX.DXGI;
 using SharpDX.D3DCompiler;
+using SharpShader;
 
 namespace Molten.Graphics
 {
@@ -281,6 +282,8 @@ namespace Molten.Graphics
         public override IComputeManager Compute => _compute;
 
         internal HlslCompiler ShaderCompiler { get; private set; }
+
+        protected override OutputLanguage ShaderLanguage => OutputLanguage.HLSL;
 
         /// <summary>
         /// Gets the resource manager bound to the renderer.

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Molten.Collections;
+using SharpShader;
 
 namespace Molten.Graphics
 {
@@ -89,6 +90,8 @@ namespace Molten.Graphics
         public override IDisplayManager DisplayManager => throw new NotImplementedException();
 
         public override IResourceManager Resources => _resourceManager;
+
+        protected override OutputLanguage ShaderLanguage => OutputLanguage.GLSL;
 
         internal DeviceGL Device { get; private set; }
     }
