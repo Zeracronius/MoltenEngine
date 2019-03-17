@@ -296,9 +296,9 @@
     <Compile Include="Surfaces\DepthClearFlags.cs" />
     <Compile Include="Surfaces\DepthFormat.cs" />
     <Compile Include="Surfaces\IDepthStencilSurface.cs" />
+    <Compile Include="Surfaces\INativeSurface.cs" />
     <Compile Include="Surfaces\IRenderSurface.cs" />
     <Compile Include="Surfaces\ISwapChainSurface.cs" />
-    <Compile Include="Surfaces\IWindowSurface.cs" />
     <Compile Include="Tasks\RendererAddScene.cs" />
     <Compile Include="Tasks\RendererRemoveScene.cs" />
     <Compile Include="Tasks\RendererTask.cs" />

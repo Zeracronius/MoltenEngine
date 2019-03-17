@@ -20,11 +20,11 @@ namespace Molten.Input
 
         /// <summary>Occurs when the device is to bind to the provided surface.</summary>
         /// <param name="surface">The surface that the device should bind to.</param>
-        internal abstract void Bind(IWindowSurface surface);
+        internal abstract void Bind(INativeSurface surface);
 
         /// <summary>Occurs when the device is to unbind from the provided surface.</summary>
         /// <param name="surface">The surface from which the device should unbind.</param>
-        internal abstract void Unbind(IWindowSurface surface);
+        internal abstract void Unbind(INativeSurface surface);
 
         internal abstract void Update(Timing time);
 
@@ -59,38 +59,6 @@ namespace Molten.Input
         protected void InvokeOnDisconnected()
         {
             OnDisconnected?.Invoke(this);
-        }
-
-        /// <summary>
-        /// Gets the handle of the parent window.
-        /// </summary>
-        /// <returns></returns>
-        private protected IntPtr? GetWindowHandle(IWindowSurface surface)
-        {
-            // Check if the surface handle is a form. 
-            // If not, find it's parent form.
-            Control ctrl = Control.FromHandle(surface.Handle);
-            if (ctrl == null)
-                return null;
-
-            if (ctrl is Form frm)
-            {
-                return ctrl.Handle;
-            }
-            else
-            {
-                frm = null;
-                while (ctrl != null)
-                {
-                    frm = ctrl as Form;
-                    if (frm == null)
-                        ctrl = ctrl.Parent;
-                    else
-                        return frm.Handle;
-                }
-            }
-
-            return null;
         }
 
         /// <summary>Returns true if the specified button is pressed.</summary>

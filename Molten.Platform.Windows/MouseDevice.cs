@@ -45,7 +45,7 @@ namespace Molten.Input
         bool _wasInsideControl = false;
         bool _requestedVisibility = true;
         bool _cursorVisibleState = true;
-        IWindowSurface _surface;
+        INativeSurface _surface;
         IntPtr _windowHandle;
         bool _bufferUpdated;
 
@@ -62,24 +62,25 @@ namespace Molten.Input
             _prevState = new MouseState();
         }
 
-        internal override void Bind(IWindowSurface surface)
+        internal override void Bind(INativeSurface surface)
         {
             _surface = surface;
             SurfaceHandleChanged(surface);
             _surface.OnHandleChanged += SurfaceHandleChanged;
+            _surface.OnParentChanged += SurfaceHandleChanged;
         }
 
-        internal override void Unbind(IWindowSurface surface)
+        internal override void Unbind(INativeSurface surface)
         {
             _surface.OnHandleChanged -= SurfaceHandleChanged;
+            _surface.OnParentChanged -= SurfaceHandleChanged;
             _surface = null;
         }
 
-        private void SurfaceHandleChanged(IWindowSurface surface)
+        private void SurfaceHandleChanged(INativeSurface surface)
         {
-            IntPtr? handle = GetWindowHandle(surface);
-            if (handle != null)
-                _windowHandle = handle.Value;
+            if (surface.WindowHandle != null)
+                _windowHandle = surface.WindowHandle.Value;
         }
 
         public override void OpenControlPanel()

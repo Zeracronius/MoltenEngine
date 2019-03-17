@@ -12,22 +12,11 @@ using System.Windows.Forms;
 namespace Molten.Graphics
 {
     /// <summary>A render target that is created from, and outputs to, a device's swap chain.</summary>
-    public class RenderFormSurface : SwapChainSurface, IWindowSurface
+    public class RenderFormSurface : WinformsSurface<RenderForm>, INativeSurface
     {
-        RenderLoop _loop;
-        RenderForm _form;
-        Rectangle _bounds;
-        IntPtr _formHandle;
-        DisplayMode _displayMode;
-        string _title;
-        bool _disposing;
-
         System.Drawing.Size? _preBorderlessSize;
         System.Drawing.Point? _preBorderlessLocation;
         System.Drawing.Rectangle? _preBorderlessScreenArea;
-
-        WindowMode _mode = WindowMode.Windowed;
-        WindowMode _requestedMode = WindowMode.Windowed;
 
         public event WindowSurfaceHandler OnClose;
 
@@ -37,123 +26,107 @@ namespace Molten.Graphics
 
         public event WindowSurfaceHandler OnHandleChanged;
 
-        internal RenderFormSurface(string formTitle, RendererDX11 renderer, int mipCount = 1, int sampleCount = 1)
-            : base(renderer, mipCount, sampleCount)
-        {
-            _title = formTitle;
-        }
+        public event WindowSurfaceHandler OnParentChanged;
 
-        internal void MoveToOutput(DisplayOutputDX<Adapter1, AdapterDescription1, Output1> output)
-        {
-            MoveToOutput(output, _mode);
-        }
+        public event WindowSurfaceHandler OnFocusGained;
 
-        internal void MoveToOutput(DisplayOutputDX<Adapter1, AdapterDescription1, Output1> output, WindowMode mode)
-        {
-            // TODO move the surface's render form to the specified output
-            // TODO resize the window to fit if it's too big.
-            //      OR
-            // TODO resize the window to fill the screen if fill = true;
-            // TODO set ownership of window to whatever output it is moved to.
-        }
+        public event WindowSurfaceHandler OnFocusLost;
 
-        protected override void OnSwapChainMissing()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="formTitle"></param>
+        /// <param name="formName">The internal name of the form.</param>
+        /// <param name="renderer"></param>
+        /// <param name="mipCount"></param>
+        /// <param name="sampleCount"></param>
+        internal RenderFormSurface(string formTitle, string formName, RendererDX11 renderer, int mipCount = 1, int sampleCount = 1)
+            : base(formTitle, formName, renderer, mipCount, sampleCount) { }
+
+        protected override void CreateControl(string title, ref RenderForm control, ref IntPtr handle)
         {
-            _form = new RenderForm(_title);
-            _form.WindowState = FormWindowState.Maximized;
-            _formHandle = _form.Handle;
+            control = new RenderForm(title);
+            control.WindowState = FormWindowState.Maximized;
+            handle = control.Handle;
             OnHandleChanged?.Invoke(this);
-
-            _loop = new RenderLoop(_form)
-            {
-                UseApplicationDoEvents = false,
-            };
-
-            //set default bounds
-            UpdateFormMode(_requestedMode);
-
-            ModeDescription modeDesc = new ModeDescription()
-            {
-                Width = _bounds.Width,
-                Height = _bounds.Height,
-                RefreshRate = new Rational(60, 1),
-                Format = DxFormat,
-                Scaling = DisplayModeScaling.Stretched,
-                ScanlineOrdering = DisplayModeScanlineOrder.Progressive,
-            };
-
-            _displayMode = new DisplayMode(modeDesc);
-            CreateSwapChain(_displayMode, true, _form.Handle);
-
-            // Subscribe to all the needed form events
-            _form.AllowUserResizing = true;
-            _form.UserResized += _form_Resized;
-            _form.Move += _form_Moved;
-            _form.FormClosing += _form_FormClosing;
-
-            _form.KeyDown += (sender, args) =>
-            {
-                if (args.Alt)
-                    args.Handled = true;
-            };
-
-            // Ignore all windows events
-            Device.DisplayManager.DxgiFactory.MakeWindowAssociation(_form.Handle, WindowAssociationFlags.IgnoreAltEnter);
         }
 
-        private void _form_FormClosing(object sender, FormClosingEventArgs e)
+        protected override void SubscribeToControl(RenderForm control)
+        {
+            // Subscribe to all the needed form events
+            control.AllowUserResizing = true;
+            control.UserResized += Control_Resized;
+            control.Move += Control_Moved;
+            control.FormClosing += Control_FormClosing;
+            control.GotFocus += Control_GotFocus;
+            control.LostFocus += Control_LostFocus;
+        }
+
+        private void Control_LostFocus(object sender, EventArgs e)
+        {
+            IsFocused = false;
+            OnFocusLost?.Invoke(this);
+        }
+
+        private void Control_GotFocus(object sender, EventArgs e)
+        {
+            IsFocused = true;
+            OnFocusGained?.Invoke(this);
+        }
+
+        private void Control_FormClosing(object sender, FormClosingEventArgs e)
         {
             e.Cancel = true;
             OnClose?.Invoke(this);
         }
 
-        void _form_Moved(object sender, EventArgs e)
+        void Control_Moved(object sender, EventArgs e)
         {
-            UpdateFormMode(_mode);
+            UpdateControlMode(Control, _mode);
         }
 
-        void _form_Resized(object sender, EventArgs e)
+        void Control_Resized(object sender, EventArgs e)
         {
             int w, h;
 
-            if (_mode == WindowMode.Borderless)
+            if (Mode == WindowMode.Borderless)
             {
-                w = _form.Bounds.Width;
-                h = _form.Bounds.Height;
+                w = Control.Bounds.Width;
+                h = Control.Bounds.Height;
             }
             else
             {
-                w = _form.ClientSize.Width;
-                h = _form.ClientSize.Height;
+                w = Control.ClientSize.Width;
+                h = Control.ClientSize.Height;
             }
 
             if (w != _width || h != _height)
                 Resize(w, h);
         }
 
-        private void UpdateFormMode(WindowMode newMode)
+        protected override void UpdateControlMode(RenderForm control, WindowMode newMode)
         {
             if (_mode != newMode)
-                Device.Log.WriteLine($"Form surface '{_title}' mode set to '{newMode}'");
+                Device.Log.WriteLine($"Form surface '{Name}' mode set to '{newMode}'");
 
             // Update current mode
             _mode = newMode;
-            System.Drawing.Rectangle clientArea = _form.ClientRectangle;
+            System.Drawing.Rectangle clientArea = Control.ClientRectangle;
 
             // Handle new mode
             switch (_mode)
             {
                 case WindowMode.Windowed:
-                    _form.FormBorderStyle = FormBorderStyle.Sizable;
+                    Control.FormBorderStyle = FormBorderStyle.Sizable;
 
                     // Calculate offset due to borders and title bars, based on the current mode of the window.
                     if (_preBorderlessLocation != null && _preBorderlessSize != null)
                     {
-                        _form.Move -= _form_Moved;
-                        _form.Location = _preBorderlessLocation.Value;
-                        _form.Size = _preBorderlessSize.Value;
+                        Control.Move -= Control_Moved;
+                        Control.Location = _preBorderlessLocation.Value;
+                        Control.Size = _preBorderlessSize.Value;
                         System.Drawing.Rectangle screenArea = _preBorderlessScreenArea.Value;
-                        _form.Move += _form_Moved;
+                        Control.Move += Control_Moved;
 
                         _bounds = new Rectangle()
                         {
@@ -169,9 +142,9 @@ namespace Molten.Graphics
                         _preBorderlessScreenArea = null;
                     }
                     else
-                    { 
+                    {
 
-                        System.Drawing.Rectangle screenArea = _form.RectangleToScreen(clientArea);
+                        System.Drawing.Rectangle screenArea = Control.RectangleToScreen(clientArea);
                         _bounds = new Rectangle()
                         {
                             X = screenArea.X,
@@ -187,18 +160,18 @@ namespace Molten.Graphics
                     // Store pre-borderless form dimensions.
                     if (_preBorderlessLocation == null && _preBorderlessSize == null)
                     {
-                        _preBorderlessLocation = _form.Location;
-                        _preBorderlessSize = _form.Size;
-                        _preBorderlessScreenArea = _form.RectangleToScreen(clientArea);
+                        _preBorderlessLocation = Control.Location;
+                        _preBorderlessSize = Control.Size;
+                        _preBorderlessScreenArea = Control.RectangleToScreen(clientArea);
                     }
 
-                    System.Drawing.Rectangle dBounds = Screen.GetBounds(_form);
+                    System.Drawing.Rectangle dBounds = Screen.GetBounds(Control);
 
-                    _form.WindowState = FormWindowState.Normal;
-                    _form.FormBorderStyle = FormBorderStyle.None;
-                    _form.TopMost = false;
+                    Control.WindowState = FormWindowState.Normal;
+                    Control.FormBorderStyle = FormBorderStyle.None;
+                    Control.TopMost = false;
 
-                    _form.Bounds = dBounds;
+                    Control.Bounds = dBounds;
                     _bounds = new Rectangle()
                     {
                         X = dBounds.X,
@@ -210,89 +183,34 @@ namespace Molten.Graphics
             }
         }
 
-        protected override void UpdateDescription(int newWidth, int newHeight, int newDepth, int newMipMapCount, int newArraySize, Format newFormat)
+        protected override void DisposeControl()
         {
-            if (_displayMode.Width != newWidth || _displayMode.Height != newHeight)
+            if (Parent != null)
+                Parent.Move -= Control_Moved;
+
+            Control.UserResized -= Control_Resized;
+            Control.Move -= Control_Moved;
+            Control.FormClosing -= Control_FormClosing;
+            Control.GotFocus -= Control_GotFocus;
+            Control.LostFocus -= Control_LostFocus;
+
+            ParentHandle = null;
+            Control?.Dispose();
+        }
+
+        protected override void OnNewParent(Control newParent, RenderForm control)
+        {
+            if(newParent is Form parentForm)
             {
-
-                _displayMode.Width = newWidth;
-                _displayMode.Height = newHeight;
-
-                // TODO validate display mode here. If invalid or unsupported by display, choose nearest supported.
-
-                UpdateFormMode(_mode);
-                _swapChain.ResizeTarget(ref _displayMode.Description);
-                Device.Log.WriteLine($"Form surface '{_title}' resized to {newWidth}x{newHeight}");
+                control.MdiParent = parentForm;
+                OnParentChanged?.Invoke(this);
             }
             else
             {
-                UpdateFormMode(_mode);
+                throw new InvalidOperationException("RenderFormSurface cannot be parented to a non-form or non-window control.");
             }
-
-            base.UpdateDescription(newWidth, newHeight, newDepth, newMipMapCount, newArraySize, newFormat);
         }
 
-        protected override bool OnPresent()
-        {
-            if (_disposing)
-            {
-                DisposeObject(ref _loop);
-                DisposeObject(ref _swapChain);
-                DisposeObject(ref _form);
-                return false;
-            }
-
-            if (_mode != _requestedMode)
-                UpdateFormMode(_requestedMode);
-
-            if (_loop.NextFrame())
-            {
-                if (Visible != _form.Visible)
-                {
-                    if (Visible)
-                    {
-                        _form.Show();
-                    }
-                    else
-                    {
-                        _form.Hide();
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>Gets or sets the form title.</summary>
-        public string Title
-        {
-            get => _form.Text;
-            set => _form.Text = value;
-        }
-
-        public IntPtr Handle => _formHandle;
-
-        /// <summary>Gets or sets the WinForms cursor for the controller.</summary>
-        public Cursor Cursor
-        {
-            get => _form.Cursor;
-            set => _form.Cursor = value;
-        }
-
-        /// <summary>Gets or sets the mode of the output form.</summary>
-        public WindowMode Mode
-        {
-            get => _requestedMode;
-            set => _requestedMode = value;
-        }
-
-        /// <summary>Gets the bounds of the window surface.</summary>
-        public Rectangle Bounds => _bounds;
-
-        /// <summary>
-        /// Gets or sets whether or not the form is visible.
-        /// </summary>
-        public bool Visible { get; set; }
+        public IntPtr? WindowHandle => Handle;
     }
 }

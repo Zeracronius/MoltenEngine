@@ -11,17 +11,8 @@ using System.Windows.Forms;
 namespace Molten.Graphics
 {
     /// <summary>A render target that is created from, and outputs to, a GUI control-based swap chain.</summary>
-    public class RenderControlSurface : SwapChainSurface, IWindowSurface
+    public class RenderControlSurface : WinformsSurface<RenderControl>, INativeSurface
     {
-        RenderLoop _loop;
-        RenderControl _control;
-        Control _parent;
-        Rectangle _bounds;
-        IntPtr _handle;
-        DisplayMode _displayMode;
-        string _title;
-        bool _disposing;
-
         public event WindowSurfaceHandler OnClose;
 
         public event WindowSurfaceHandler OnMinimize;
@@ -30,90 +21,95 @@ namespace Molten.Graphics
 
         public event WindowSurfaceHandler OnHandleChanged;
 
-        internal RenderControlSurface(string formTitle, RendererDX11 renderer, int mipCount = 1, int sampleCount = 1)
-            : base(renderer, mipCount, sampleCount)
+        public event WindowSurfaceHandler OnParentChanged;
+
+        public event WindowSurfaceHandler OnFocusGained;
+
+        public event WindowSurfaceHandler OnFocusLost;
+
+        IntPtr? _windowHandle;
+        Control _parentWindow;
+
+        internal RenderControlSurface(string controlTitle, string controlName, RendererDX11 renderer, int mipCount = 1, int sampleCount = 1)
+            : base(controlTitle, controlName, renderer, mipCount, sampleCount) { }
+
+        protected override void CreateControl(string title, ref RenderControl control, ref IntPtr handle)
         {
-            _title = formTitle;
+            control = new RenderControl()
+            {
+                Size = new System.Drawing.Size(1, 1),
+            };
+            handle = control.Handle;
+            OnHandleChanged?.Invoke(this);
         }
 
-        protected override void OnSwapChainMissing()
+        protected override void SubscribeToControl(RenderControl control)
         {
-            _control = new RenderControl()
-            {
-                Size = new System.Drawing.Size(1,1),
-            };
-            _handle = _control.Handle;
-            OnHandleChanged?.Invoke(this);
-
-            _loop = new RenderLoop(_control)
-            {
-                UseApplicationDoEvents = false,
-            };
-
-            //set default bounds
-            UpdateControlMode();
-
-            ModeDescription modeDesc = new ModeDescription()
-            {
-                Width = _bounds.Width,
-                Height = _bounds.Height,
-                RefreshRate = new Rational(60, 1),
-                Format = DxFormat,
-                Scaling = DisplayModeScaling.Stretched,
-                ScanlineOrdering = DisplayModeScanlineOrder.Progressive,
-            };
-
-            _displayMode = new DisplayMode(modeDesc);
-            CreateSwapChain(_displayMode, true, _control.Handle);
-
             // Subscribe to all the needed form events
-            DetectRootParent();
-            _control.Resize += _control_Resized;
-            _control.Move += _control_Moved;
-            _control.ParentChanged += _control_ParentChanged;
-            _control.HandleDestroyed += _control_HandleDestroyed;
-            _control.VisibleChanged += _control_VisibleChanged;
+            GetParentWindow();
+            control.Resize += _control_Resized;
+            control.Move += _control_Moved;
+            control.ParentChanged += _control_ParentChanged;
+            control.HandleDestroyed += _control_HandleDestroyed;
+            control.VisibleChanged += _control_VisibleChanged;
+            control.GotFocus += _control_GotFocus;
+            control.LostFocus += _control_LostFocus;
+        }
 
-            _control.KeyDown += (sender, args) =>
-            {
-                if (args.Alt)
-                    args.Handled = true;
-            };
+        private void _control_LostFocus(object sender, EventArgs e)
+        {
+            IsFocused = false;
+            OnFocusLost?.Invoke(this);
+        }
 
-            // Ignore all windows events
-            Device.DisplayManager.DxgiFactory.MakeWindowAssociation(_control.Handle, WindowAssociationFlags.IgnoreAltEnter);
+        private void _control_GotFocus(object sender, EventArgs e)
+        {
+            IsFocused = true;
+            OnFocusGained?.Invoke(this);
         }
 
         private void _control_ParentChanged(object sender, EventArgs e)
         {
             // Unsubscribe from old parent
-            if(_parent != null)
-            {
-                _parent.Move -= _control_Moved;
-            }
+            if(_parentWindow != null)
+                _parentWindow.Move -= _control_Moved;
 
-            DetectRootParent();
-            UpdateControlMode();
+            GetParentWindow();
+            UpdateControlMode(Control, _mode);
         }
 
-        private void DetectRootParent()
+        private void GetParentWindow()
         {
-            Control candidate = _control;
-            while(candidate.Parent != null)
-                candidate = candidate.Parent;
+            _windowHandle = null;
+            _parentWindow = null;
 
-            _parent = candidate;
+            // Check if the surface handle is a form. 
+            // If not, find it's parent form.
+            Control ctrl = Control;
+            while (ctrl != null)
+            {
+                if (ctrl is Form frm)
+                {
+                    _windowHandle = frm.Handle;
+                    _parentWindow = frm;
+                    break;
+                }
+                else
+                {
+                    ctrl = ctrl.Parent;
+                }
+            }
 
             // Subscribe to new parent
-            if (_parent != null)
-                _parent.Move += _control_Moved;
+            if (_parentWindow != null)
+                _parentWindow.Move += _control_Moved;
 
-            _control_Resized(_parent, new EventArgs());
+            _control_Resized(_parentWindow, new EventArgs());
         }
 
         private void _control_VisibleChanged(object sender, EventArgs e)
         {
-            Visible = _control.Visible;
+            Visible = Control.Visible;
         }
 
         private void _control_HandleDestroyed(object sender, EventArgs e)
@@ -123,23 +119,23 @@ namespace Molten.Graphics
 
         void _control_Moved(object sender, EventArgs e)
         {
-            UpdateControlMode();
+            UpdateControlMode(Control, _mode);
         }
 
         void _control_Resized(object sender, EventArgs e)
         {
-            int w = _control.ClientSize.Width;
-            int h = _control.ClientSize.Height;
+            int w = Control.ClientSize.Width;
+            int h = Control.ClientSize.Height;
 
             if (w != _width || h != _height)
                 Resize(w, h);
         }
 
-        private void UpdateControlMode()
+        protected override void UpdateControlMode(RenderControl control, WindowMode mode)
         {
             // Calculate offset due to borders and title bars, based on the current mode of the window.
-            System.Drawing.Rectangle clientArea = _control.ClientRectangle;
-            System.Drawing.Rectangle screenArea = _control.RectangleToScreen(clientArea);
+            System.Drawing.Rectangle clientArea = control.ClientRectangle;
+            System.Drawing.Rectangle screenArea = control.RectangleToScreen(clientArea);
 
             _bounds = new Rectangle()
             {
@@ -150,106 +146,33 @@ namespace Molten.Graphics
             };
         }
 
-        protected override void UpdateDescription(int newWidth, int newHeight, int newDepth, int newMipMapCount, int newArraySize, Format newFormat)
+        protected override void DisposeControl()
         {
-            if (_displayMode.Width != newWidth || _displayMode.Height != newHeight)
-            {
+            if (_parentWindow != null)
+                _parentWindow.Move -= _control_Moved;
 
-                _displayMode.Width = newWidth;
-                _displayMode.Height = newHeight;
+            Control.Resize -= _control_Resized;
+            Control.Move -= _control_Moved;
+            Control.ParentChanged -= _control_ParentChanged;
+            Control.HandleDestroyed -= _control_HandleDestroyed;
+            Control.VisibleChanged -= _control_VisibleChanged;
+            Control.GotFocus -= _control_GotFocus;
+            Control.LostFocus -= _control_LostFocus;
 
-                // TODO validate display mode here. If invalid or unsupported by display, choose nearest supported.
-
-                UpdateControlMode();
-                _swapChain.ResizeTarget(ref _displayMode.Description);
-                Device.Log.WriteLine($"Form surface '{_title}' resized to {newWidth}x{newHeight}");
-            }
-            else
-            {
-                UpdateControlMode();
-            }
-
-            base.UpdateDescription(newWidth, newHeight, newDepth, newMipMapCount, newArraySize, newFormat);
+            ParentHandle = null;
+            _parentWindow = null;
+            _windowHandle = null;
+            Control.Dispose();
         }
 
-        protected override bool OnPresent()
+        protected override void OnNewParent(Control newParent, RenderControl control)
         {
-            if (_disposing)
-            {
-                DisposeObject(ref _loop);
-                DisposeObject(ref _swapChain);
-                DisposeControl();
-                return false;
-            }
-
-            if (_loop.NextFrame())
-            {
-                if (Visible != _control.Visible)
-                {
-                    if (Visible)
-                    {
-                        _control.Show();
-                    }
-                    else
-                    {
-                        _control.Hide();
-                        return false;
-                    }
-                }
-            }
-
-            return true;
+            control.Size = newParent.Size;
+            control.Location = newParent.Location;
+            control.Dock = DockStyle.Fill;
+            OnParentChanged?.Invoke(this);
         }
 
-        private void DisposeControl()
-        {
-            if (_parent != null)
-                _parent.Move -= _control_Moved;
-
-            _control.Resize -= _control_Resized;
-            _control.Move -= _control_Moved;
-            _control.ParentChanged -= _control_ParentChanged;
-            _control.HandleDestroyed -= _control_HandleDestroyed;
-            _control.VisibleChanged -= _control_VisibleChanged;
-
-            _parent = null;
-            DisposeObject(ref _control);
-        }
-
-        /// <summary>Gets or sets the form title.</summary>
-        public string Title
-        {
-            get => _control.Text;
-            set => _control.Text = value;
-        }
-
-        public IntPtr Handle => _handle;
-
-        /// <summary>Gets or sets the WinForms cursor for the controller.</summary>
-        public Cursor Cursor
-        {
-            get => _control.Cursor;
-            set => _control.Cursor = value;
-        }
-
-        /// <summary>Gets the bounds of the window surface.</summary>
-        public Rectangle Bounds => _bounds;
-
-        /// <summary>
-        /// Gets or sets whether or not the control is visible.
-        /// </summary>
-        public bool Visible { get; set; }
-
-        /// <summary>
-        /// Gets or sets the window mode of the control.
-        /// </summary>
-        public WindowMode Mode { get; set; }
-
-        #region Cast operators
-        public static explicit operator UserControl(RenderControlSurface surface)
-        {
-            return surface._control;
-        }
-        #endregion
+        public IntPtr? WindowHandle => _windowHandle;
     }
 }
