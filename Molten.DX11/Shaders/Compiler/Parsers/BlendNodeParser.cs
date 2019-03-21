@@ -20,7 +20,7 @@ namespace Molten.Graphics
             StateConditions conditions = StateConditions.None;
             int rtIndex = 0;
 
-            GraphicsBlendState template = foundation.Device.BlendBank.GetPreset(BlendPreset.Default);
+            GraphicsBlendState template = foundation.Device.BlendBank.GetPreset(BlendStatePreset.Default);
             RenderTargetBlendDescription rtBlendDesc = template.GetSurfaceBlendState(0); // Use the default preset's first (0) RT blend description.
 
             // Prerequisit attributes
@@ -35,7 +35,7 @@ namespace Molten.Graphics
                         break;
 
                     case "preset":
-                        if (Enum.TryParse(attribute.InnerText, true, out BlendPreset preset))
+                        if (Enum.TryParse(attribute.InnerText, true, out BlendStatePreset preset))
                         {
                             // Use a template preset's first (0) RT blend description.
                             template = foundation.Device.BlendBank.GetPreset(preset);
@@ -50,7 +50,7 @@ namespace Molten.Graphics
             }
 
             // Use existing state if present, or create a new one.
-            GraphicsBlendState state = new GraphicsBlendState(foundation.Device, foundation.BlendState[conditions] ?? foundation.Device.BlendBank.GetPreset(BlendPreset.Default));
+            GraphicsBlendState state = new GraphicsBlendState(foundation.Device, foundation.BlendState[conditions] ?? foundation.Device.BlendBank.GetPreset(BlendStatePreset.Default));
             state.IndependentBlendEnable = (state.IndependentBlendEnable || (rtIndex > 0));
 
             foreach (XmlNode child in node.ChildNodes)

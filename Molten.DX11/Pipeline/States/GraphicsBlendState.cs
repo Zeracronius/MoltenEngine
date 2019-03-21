@@ -14,30 +14,41 @@ namespace Molten.Graphics
         internal BlendState State;
         BlendStateDescription _desc;
 
-        bool _dirty;
-        Color4 _blendFactor;
-        uint _blendSampleMask;
-
         internal GraphicsBlendState(DeviceDX11 device, GraphicsBlendState source) : base(device)
         {
             _desc = source._desc.Clone();
-            _blendFactor = source._blendFactor;
-            _blendSampleMask = source._blendSampleMask;
+            BlendFactor = source.BlendFactor;
+            BlendSampleMask = source.BlendSampleMask;
         }
 
-        internal GraphicsBlendState(DeviceDX11 device) : base(device)
+        internal GraphicsBlendState(DeviceDX11 device) : this(device, ShaderBlendStateDefinition.Presets[BlendStatePreset.Default])
         {
             _desc = BlendStateDescription.Default();
-            _blendFactor = new Color4(1, 1, 1, 1);
-            _blendSampleMask = 0xffffffff;
         }
 
-        internal GraphicsBlendState(DeviceDX11 device, RenderTargetBlendDescription rtDesc) : base(device)
+        internal GraphicsBlendState(DeviceDX11 device, ShaderBlendStateDefinition definition) : base(device)
         {
-            _desc = BlendStateDescription.Default();
-            _desc.RenderTarget[0] = rtDesc;
-            _blendFactor = new Color4(1, 1, 1, 1);
-            _blendSampleMask = 0xffffffff;
+            _desc = new BlendStateDescription()
+            {
+                AlphaToCoverageEnable = definition.AlphaToCoverageEnable,
+                IndependentBlendEnable = definition.IndependentBlendEnable,
+            };
+
+            ShaderBlendSlotDefinition slotDef = definition.Targets[0];
+
+            _desc.RenderTarget[0] = new RenderTargetBlendDescription()
+            {
+                AlphaBlendOperation = (BlendOperation)slotDef.AlphaBlendOperation,
+                BlendOperation = (BlendOperation)slotDef.BlendOperation,
+                DestinationAlphaBlend = (BlendOption)slotDef.DestinationAlphaBlend,
+                DestinationBlend = (BlendOption)slotDef.DestinationBlend,
+                IsBlendEnabled = slotDef.IsBlendEnabled,
+                RenderTargetWriteMask = (ColorWriteMaskFlags)slotDef.RenderTargetWriteMask,
+                SourceAlphaBlend = (BlendOption)slotDef.SourceAlphaBlend,
+                SourceBlend = (BlendOption)slotDef.SourceBlend,
+            };
+            BlendFactor = definition.BlendFactor;
+            BlendSampleMask = definition.BlendSampleMask;
         }
 
         internal RenderTargetBlendDescription GetSurfaceBlendState(int index)
@@ -84,17 +95,8 @@ namespace Molten.Graphics
 
         internal override void Refresh(PipeDX11 context, PipelineBindSlot<DeviceDX11, PipeDX11> slot)
         {
-            if (State == null || _dirty)
-            {
-                _dirty = false;
-
-                // Dispose of previous state object
-                if (State != null)
-                    State.Dispose();
-
-                // Create new state
+            if (State == null)
                 State = new BlendState(context.Device.D3d, _desc);
-            }
         }
 
         private protected override void OnPipelineDispose()
@@ -102,57 +104,18 @@ namespace Molten.Graphics
             DisposeObject(ref State);
         }
 
-        public bool AlphaToCoverageEnable
-        {
-            get => _desc.AlphaToCoverageEnable;
-            set
-            {
-                _desc.AlphaToCoverageEnable = value;
-                _dirty = true;
-            }
-        }
+        public bool AlphaToCoverageEnable { get; }
 
-        public bool IndependentBlendEnable
-        {
-            get => _desc.IndependentBlendEnable;
-            set
-            {
-                _desc.IndependentBlendEnable = value;
-                _dirty = true;
-            }
-        }
+        public bool IndependentBlendEnable { get; }
 
         /// <summary>
         /// Gets or sets the blend sample mask.
         /// </summary>
-        public uint BlendSampleMask
-        {
-            get => _blendSampleMask;
-            set => _blendSampleMask = value;
-        }
+        public uint BlendSampleMask { get; }
 
         /// <summary>
         /// Gets or sets the blend factor.
         /// </summary>
-        public Color4 BlendFactor
-        {
-            get => _blendFactor;
-            set => _blendFactor = value;
-        }
-
-        /// <summary>
-        /// Gets or sets a render target blend description at the specified index.
-        /// </summary>
-        /// <param name="rtIndex">The render target/surface blend index.</param>
-        /// <returns></returns>
-        internal RenderTargetBlendDescription this[int rtIndex]
-        {
-            get => _desc.RenderTarget[rtIndex];
-            set
-            {
-                _desc.RenderTarget[rtIndex] = value;
-                _dirty = true;
-            }
-        }
+        public Color4 BlendFactor { get; }
     }
 }

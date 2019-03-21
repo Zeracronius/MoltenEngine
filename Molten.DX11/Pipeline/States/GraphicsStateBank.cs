@@ -6,18 +6,16 @@ using System.Threading.Tasks;
 
 namespace Molten.Graphics
 {
-    internal abstract class GraphicsStateBank<T, E> : IDisposable
+    public abstract class GraphicsStateBank<T, E> : IDisposable
         where T : PipelineObject<DeviceDX11, PipeDX11>
         where E: struct, IConvertible
     {
-        protected T[] _presets;
+        protected Dictionary<E, T> _presets;
         List<T> _states;
 
         internal GraphicsStateBank()
         {
-            IConvertible last = EnumHelper.GetLastValue<E>();
-            int presetArraySize = (int)last + 1;
-            _presets = new T[presetArraySize];
+            _presets = new Dictionary<E, T>();
             _states = new List<T>();
         }
 
@@ -25,13 +23,6 @@ namespace Molten.Graphics
         {
             foreach (T state in _states)
                 state.Dispose();
-        }
-
-        protected void AddPreset(E id, T preset)
-        {
-            int idVal = (int)(object)id;
-            _presets[idVal] = preset;
-            _states.Add(preset);
         }
 
         /// <summary>
@@ -57,6 +48,21 @@ namespace Molten.Graphics
             return state;
         }
 
-        internal abstract T GetPreset(E value);
+        internal T GetPreset(E preset)
+        {
+            if(_presets.TryGetValue(preset, out T state))
+            {
+                return state;
+            }
+            else
+            {
+                state = CreatePreset(preset);
+                _presets.Add(preset, state);
+            }
+
+            return state;
+        }
+
+        protected abstract T CreatePreset(E preset);
     }
 }

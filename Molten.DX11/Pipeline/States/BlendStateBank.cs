@@ -7,67 +7,18 @@ using System.Threading.Tasks;
 
 namespace Molten.Graphics
 {
-    internal class BlendStateBank : GraphicsStateBank<GraphicsBlendState, BlendPreset>
+    internal class BlendStateBank : GraphicsStateBank<GraphicsBlendState, BlendStatePreset>
     {
+        DeviceDX11 _device;
+
         internal BlendStateBank(DeviceDX11 device)
         {
-            AddPreset(BlendPreset.Default, new GraphicsBlendState(device));
-
-            // Additive blending preset.
-            GraphicsBlendState state = new GraphicsBlendState(device, new RenderTargetBlendDescription()
-            {
-                SourceBlend = BlendOption.One,
-                DestinationBlend = BlendOption.One,
-                BlendOperation = BlendOperation.Add,
-                SourceAlphaBlend = BlendOption.One,
-                DestinationAlphaBlend = BlendOption.One,
-                AlphaBlendOperation = BlendOperation.Add,
-                RenderTargetWriteMask = ColorWriteMaskFlags.All,
-                IsBlendEnabled = true,
-            })
-            {
-                AlphaToCoverageEnable = false,
-                IndependentBlendEnable = false,
-
-            };
-            AddPreset(BlendPreset.Additive, state);
-
-            // Pre-multiplied alpha
-            state = new GraphicsBlendState(device, new RenderTargetBlendDescription()
-            {
-                SourceBlend = BlendOption.SourceAlpha,
-                DestinationBlend = BlendOption.InverseSourceAlpha,
-                BlendOperation = BlendOperation.Add,
-
-                SourceAlphaBlend = BlendOption.InverseDestinationAlpha,
-                DestinationAlphaBlend = BlendOption.One,
-                AlphaBlendOperation = BlendOperation.Add,
-
-                RenderTargetWriteMask = ColorWriteMaskFlags.All,
-                IsBlendEnabled = true,
-            })
-            {
-                AlphaToCoverageEnable = false,
-                IndependentBlendEnable = false,
-            };
-            AddPreset(BlendPreset.PreMultipliedAlpha, state);
+            _device = device;
         }
 
-        internal override GraphicsBlendState GetPreset(BlendPreset value)
+        protected override GraphicsBlendState CreatePreset(BlendStatePreset preset)
         {
-            return _presets[(int)value];
+            return new GraphicsBlendState(_device, ShaderBlendStateDefinition.Presets[preset]);
         }
-    }
-
-    public enum BlendPreset
-    {
-        /// <summary>The default blend mode.</summary>
-        Default = 0,
-
-        /// <summary>Additive blending mode.</summary>
-        Additive = 1,
-
-        /// <summary>Pre-multiplied alpha blending mode.</summary>
-        PreMultipliedAlpha = 2,
     }
 }

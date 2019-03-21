@@ -133,6 +133,7 @@
     <Compile Include="Exceptions\GraphicsContextException.cs" />
     <Compile Include="Exceptions\MappedBufferException.cs" />
     <Compile Include="Exceptions\UnsupportedFeatureException.cs" />
+    <Compile Include="Pipeline\States\GraphicsStateBank.cs" />
     <Compile Include="Renderer\MainSurfaceType.cs" />
     <Compile Include="Renderer\RenderChain.Context.cs" />
     <Compile Include="Renderer\RenderChain.cs" />
@@ -173,7 +174,6 @@
     <Compile Include="Pipeline\PipelineOutput.cs" />
     <Compile Include="Pipeline\PipelineShaderObject.cs" />
     <Compile Include="Pipeline\States\DepthStateBank.cs" />
-    <Compile Include="Pipeline\States\GraphicsStateBank.cs" />
     <Compile Include="Pipeline\States\BlendStateBank.cs" />
     <Compile Include="Pipeline\States\RasterizerStateBank.cs" />
     <Compile Include="Pipeline\ShaderInputStage.cs" />
@@ -203,7 +203,6 @@
     <Compile Include="Shaders\Compiler\Parsers\RasterizerNodeParser.cs" />
     <Compile Include="Shaders\HlslFoundation.cs" />
     <Compile Include="Shaders\ShaderStateBank.cs" />
-    <Compile Include="Shaders\StateConditions.cs" />
     <Compile Include="ShaderModelExtensionsDX11.cs" />
     <Compile Include="Shaders\Compiler\ComputeCompiler.cs" />
     <Compile Include="Shaders\Compiler\HlslCompiler.cs" />

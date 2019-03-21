@@ -1,0 +1,17 @@
+﻿[
+  {
+    "Name": "position-texture",
+    "Description": "A simple shader which renders 3D messhes with position and 2D UV data.",
+    "DefaultBlendState": {
+      "preset": "PreMultipliedAlpha"
+    },
+    "Passes": [
+      {
+        "name": "main",
+        "iterations": 1,
+        "vertex": "BasicTexture.cs/VS",
+        "fragment": "BasicTexture.cs/PS"
+      }
+    ]
+  }
+]

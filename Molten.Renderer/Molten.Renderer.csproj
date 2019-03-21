@@ -7,7 +7,7 @@
     <ProjectGuid>{B0C0AF46-DEF3-4500-AAE2-A949ADEFF6A6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Molten.Renderer</RootNamespace>
+    <RootNamespace>Molten.Graphics</RootNamespace>
     <AssemblyName>Molten.Renderer</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -67,10 +67,10 @@
       <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp.2.9.0\lib\netstandard1.3\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
     </Reference>
     <Reference Include="SharpShader, Version=0.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpShader.0.0.3-alpha2\lib\SharpShader.dll</HintPath>
+      <HintPath>..\packages\SharpShader.0.0.4-alpha\lib\SharpShader.dll</HintPath>
     </Reference>
     <Reference Include="SharpShader.Core, Version=0.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpShader.Core.0.0.3-alpha2\lib\SharpShader.Core.dll</HintPath>
+      <HintPath>..\packages\SharpShader.Core.0.0.4-alpha\lib\SharpShader.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.AppContext, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -262,6 +262,9 @@
     <Compile Include="Scene\ObjectRenderData.cs" />
     <Compile Include="Scene\RenderCamera.cs" />
     <Compile Include="Scene\SceneRenderData.cs" />
+    <Compile Include="Pipeline\States\Blend\BlendFunc.cs" />
+    <Compile Include="Pipeline\States\Blend\BlendOp.cs" />
+    <Compile Include="Pipeline\States\Blend\BlendStatePreset.cs" />
     <Compile Include="Shaders\ComparisonMode.cs" />
     <Compile Include="Shaders\Compute\IComputeManager.cs" />
     <Compile Include="Shaders\DummyShaderValue.cs" />
@@ -269,6 +272,7 @@
     <Compile Include="Shaders\IComputeTask.cs" />
     <Compile Include="Shaders\IShader.cs" />
     <Compile Include="Shaders\IShaderResource.cs" />
+    <Compile Include="Shaders\Materials\MaterialDefinition.cs" />
     <Compile Include="Shaders\Materials\IMaterial.cs" />
     <Compile Include="Shaders\Materials\IMaterialPass.cs" />
     <Compile Include="Shaders\Materials\IShaderValue.cs" />
@@ -281,10 +285,20 @@
     <Compile Include="Shaders\Samplers\IShaderSampler.cs" />
     <Compile Include="Shaders\Samplers\SamplerAddressMode.cs" />
     <Compile Include="Shaders\Samplers\SamplerFilter.cs" />
+    <Compile Include="Pipeline\States\Blend\BlendWriteMaskFlags.cs" />
+    <Compile Include="Pipeline\States\Blend\ShaderDepthStencilDefinition.cs" />
+    <Compile Include="Pipeline\States\Blend\ShaderBlendStateDefinition.cs" />
     <Compile Include="Shaders\ShaderCompileResult.cs" />
     <Compile Include="Shaders\ShaderModel.cs" />
     <Compile Include="Shaders\ShaderParseResult.cs" />
     <Compile Include="Shaders\ShaderType.cs" />
+    <Compile Include="Pipeline\States\DepthStencil\DepthStencilPreset.cs" />
+    <Compile Include="Pipeline\States\DepthStencil\StencilOp.cs" />
+    <Compile Include="Pipeline\States\Rasterizer\RasterizerFillMode.cs" />
+    <Compile Include="Pipeline\States\Rasterizer\RasterizerCullMode.cs" />
+    <Compile Include="Pipeline\States\Rasterizer\RasterizerPreset.cs" />
+    <Compile Include="Pipeline\States\Rasterizer\ShaderRasterizerDefinition.cs" />
+    <Compile Include="Pipeline\States\StateConditions.cs" />
     <Compile Include="SpriteBatch\AnimatedSprite.cs" />
     <Compile Include="SpriteBatch\GraphRenderer.cs" />
     <Compile Include="SpriteBatch\ISpriteRenderer.cs" />

@@ -71,7 +71,7 @@ namespace Molten.Graphics
                 // Populate missing material states with default.
                 material.DepthState.FillMissingWith(renderer.Device.DepthBank.GetPreset(DepthStencilPreset.Default));
                 material.RasterizerState.FillMissingWith(renderer.Device.RasterizerBank.GetPreset(RasterizerPreset.Default));
-                material.BlendState.FillMissingWith(renderer.Device.BlendBank.GetPreset(BlendPreset.Default));
+                material.BlendState.FillMissingWith(renderer.Device.BlendBank.GetPreset(BlendStatePreset.Default));
 
                 ShaderSampler defaultSampler = renderer.Device.SamplerBank.GetPreset(SamplerPreset.Default);
                 for (int i = 0; i < material.Samplers.Length; i++)

@@ -39,19 +39,4 @@ namespace Molten.Graphics
             return _presets[(int)value];
         }
     }
-
-    public enum DepthStencilPreset
-    {
-        /// <summary>Default depth stencil state with stencil testing enabled.</summary>
-        Default = 0,
-
-        /// <summary>The default depth stencil state, but with stencil testing disabled.</summary>
-        DefaultNoStencil = 1,
-
-        /// <summary>The same as default, but with the z-buffer disabled.</summary>
-        ZDisabled = 2,
-
-        /// <summary>A state used for drawing 2D sprites. Stenicl testing is enabled.</summary>
-        Sprite2D = 3,
-    }
 }

@@ -64,7 +64,7 @@ namespace Molten.Graphics
 
         internal DepthStencilState State;
         DepthStencilStateDescription _desc;
-        internal bool _dirty;
+        internal bool _dirty = true;
 
         Face _frontFace;
         Face _backFace;
@@ -125,7 +125,7 @@ namespace Molten.Graphics
 
         internal override void Refresh(PipeDX11 pipe, PipelineBindSlot<DeviceDX11, PipeDX11> slot)
         {
-            if (State == null || _dirty)
+            if (_dirty)
             {
                 _dirty = false;
 
