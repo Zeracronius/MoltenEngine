@@ -21,10 +21,7 @@ namespace Molten.Graphics
             BlendSampleMask = source.BlendSampleMask;
         }
 
-        internal GraphicsBlendState(DeviceDX11 device) : this(device, ShaderBlendStateDefinition.Presets[BlendStatePreset.Default])
-        {
-            _desc = BlendStateDescription.Default();
-        }
+        internal GraphicsBlendState(DeviceDX11 device) : this(device, ShaderBlendStateDefinition.Presets[BlendStatePreset.Default]) { }
 
         internal GraphicsBlendState(DeviceDX11 device, ShaderBlendStateDefinition definition) : base(device)
         {
@@ -47,6 +44,7 @@ namespace Molten.Graphics
                 SourceAlphaBlend = (BlendOption)slotDef.SourceAlphaBlend,
                 SourceBlend = (BlendOption)slotDef.SourceBlend,
             };
+
             BlendFactor = definition.BlendFactor;
             BlendSampleMask = definition.BlendSampleMask;
         }
@@ -66,10 +64,10 @@ namespace Molten.Graphics
 
         public bool Equals(GraphicsBlendState other)
         {
-            if (_desc.IndependentBlendEnable != other.IndependentBlendEnable)
+            if (_desc.IndependentBlendEnable != other._desc.IndependentBlendEnable)
                 return false;
 
-            if (_desc.AlphaToCoverageEnable != other.AlphaToCoverageEnable)
+            if (_desc.AlphaToCoverageEnable != other._desc.AlphaToCoverageEnable)
                 return false;
 
             // Equality check against all RT blend states
@@ -103,10 +101,6 @@ namespace Molten.Graphics
         {
             DisposeObject(ref State);
         }
-
-        public bool AlphaToCoverageEnable { get; }
-
-        public bool IndependentBlendEnable { get; }
 
         /// <summary>
         /// Gets or sets the blend sample mask.

@@ -12,7 +12,6 @@ namespace Molten.Graphics
     {
         internal RasterizerState State;
         RasterizerStateDescription _desc;
-        bool _dirty;
 
         /// <summary>
         /// 
@@ -21,13 +20,25 @@ namespace Molten.Graphics
         internal GraphicsRasterizerState(DeviceDX11 device, GraphicsRasterizerState source) : base(device)
         {
             _desc = source._desc;
-            _dirty = true;
         }
 
-        internal GraphicsRasterizerState(DeviceDX11 device) : base(device)
+        internal GraphicsRasterizerState(DeviceDX11 device) : this(device, ShaderRasterizerDefinition.Presets[RasterizerPreset.Default]) { }
+
+        internal GraphicsRasterizerState(DeviceDX11 device, ShaderRasterizerDefinition definition) : base(device)
         {
-            _desc = RasterizerStateDescription.Default();
-            _dirty = true;
+            _desc = new RasterizerStateDescription()
+            {
+                CullMode = (CullMode)definition.CullMode,
+                DepthBias = definition.DepthBias,
+                DepthBiasClamp = definition.DepthBiasClamp,
+                FillMode = (FillMode)definition.FillMode,
+                IsAntialiasedLineEnabled = definition.IsAntialiasedLineEnabled,
+                IsDepthClipEnabled = definition.IsDepthClipEnabled,
+                IsFrontCounterClockwise = definition.IsFrontCounterClockwise,
+                IsMultisampleEnabled = definition.IsMultisampleEnabled,
+                IsScissorEnabled = definition.IsScissorEnabled,
+                SlopeScaledDepthBias = definition.SlopeScaledDepthBias,
+            };
         }
 
         public override bool Equals(object obj)
@@ -54,122 +65,13 @@ namespace Molten.Graphics
 
         internal override void Refresh(PipeDX11 pipe, PipelineBindSlot<DeviceDX11, PipeDX11> slot)
         {
-            if (State == null || _dirty)
-            {
-                _dirty = false;
-
-                //dispose of previous state object
-                if (State != null)
-                    State.Dispose();
-
-                //create new state
+            if (State == null)
                 State = new RasterizerState(pipe.Device.D3d, _desc);
-            }
         }
 
         private protected override void OnPipelineDispose()
         {
             DisposeObject(ref State);
-        }
-
-        public CullMode CullMode
-        {
-            get { return _desc.CullMode; }
-            set
-            {
-                _desc.CullMode = value;
-                _dirty = true;
-            }
-        }
-
-        public int DepthBias
-        {
-            get { return _desc.DepthBias; }
-            set
-            {
-                _desc.DepthBias = value;
-                _dirty = true;
-            }
-        }
-
-        public float DepthBiasClamp
-        {
-            get { return _desc.DepthBiasClamp; }
-            set
-            {
-                _desc.DepthBiasClamp = value;
-                _dirty = true;
-            }
-        }
-
-        public FillMode FillMode
-        {
-            get { return _desc.FillMode; }
-            set
-            {
-                _desc.FillMode = value;
-                _dirty = true;
-            }
-        }
-
-        public bool IsAntialiasedLineEnabled
-        {
-            get { return _desc.IsAntialiasedLineEnabled; }
-            set
-            {
-                _desc.IsAntialiasedLineEnabled = value;
-                _dirty = true;
-            }
-        }
-
-        public bool IsDepthClipEnabled
-        {
-            get { return _desc.IsDepthClipEnabled; }
-            set
-            {
-                _desc.IsDepthClipEnabled = value;
-                _dirty = true;
-            }
-        }
-
-        public bool IsFrontCounterClockwise
-        {
-            get { return _desc.IsFrontCounterClockwise; }
-            set
-            {
-                _desc.IsFrontCounterClockwise = value;
-                _dirty = true;
-            }
-        }
-
-        public bool IsMultisampleEnabled
-        {
-            get { return _desc.IsMultisampleEnabled; }
-            set
-            {
-                _desc.IsMultisampleEnabled = value;
-                _dirty = true;
-            }
-        }
-
-        public bool IsScissorEnabled
-        {
-            get { return _desc.IsScissorEnabled; }
-            set
-            {
-                _desc.IsScissorEnabled = value;
-                _dirty = true;
-            }
-        }
-
-        public float SlopeScaledDepthBias
-        {
-            get { return _desc.SlopeScaledDepthBias; }
-            set
-            {
-                _desc.SlopeScaledDepthBias = value;
-                _dirty = true;
-            }
         }
     }
 }

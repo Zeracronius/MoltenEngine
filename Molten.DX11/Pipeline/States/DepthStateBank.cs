@@ -9,34 +9,16 @@ namespace Molten.Graphics
 {
     internal class DepthStateBank : GraphicsStateBank<GraphicsDepthState, DepthStencilPreset>
     {
+        DeviceDX11 _device;
+
         internal DepthStateBank(DeviceDX11 device)
         {
-            AddPreset(DepthStencilPreset.Default, new GraphicsDepthState(device)
-            {
-                IsStencilEnabled = true,
-            });
-
-            // Default preset
-            AddPreset(DepthStencilPreset.DefaultNoStencil, new GraphicsDepthState(device));
-
-            // Z-disabled preset
-            AddPreset(DepthStencilPreset.ZDisabled, new GraphicsDepthState(device)
-            {
-                IsDepthEnabled = false,
-                DepthWriteMask = DepthWriteMask.Zero,
-            });
-
-            AddPreset(DepthStencilPreset.Sprite2D, new GraphicsDepthState(device)
-            {
-                IsDepthEnabled = true,
-                IsStencilEnabled = true,
-                DepthComparison = Comparison.LessEqual,
-            });
+            _device = device;
         }
 
-        internal override GraphicsDepthState GetPreset(DepthStencilPreset value)
+        protected override GraphicsDepthState CreatePreset(DepthStencilPreset preset)
         {
-            return _presets[(int)value];
+            return new GraphicsDepthState(_device, ShaderDepthStencilDefinition.Presets[preset]);
         }
     }
 }

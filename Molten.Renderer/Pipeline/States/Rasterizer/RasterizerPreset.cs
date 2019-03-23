@@ -24,7 +24,7 @@ namespace Molten.Graphics
         /// <summary>
         /// The same as <see cref="Default"/> but with multisampling enabled.
         /// </summary>
-        DefaultMultisample = 4,
+        Multisample = 4,
 
         /// <summary>
         /// The same as <see cref="ScissorTest"/> but with multisampling enabled.

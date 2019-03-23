@@ -25,7 +25,7 @@ namespace Molten.Graphics
         [DataMember]
         public ShaderDepthStencilDefinition DepthStencilState { get; set; } = ShaderDepthStencilDefinition.Presets[DepthStencilPreset.Default];
 
-        public ShaderRasterizerDefinition RasterizerSTate { get; set; } = ShaderRasterizerDefinition.Presets[RasterizerPreset.Default];
+        public ShaderRasterizerDefinition RasterizerState { get; set; } = ShaderRasterizerDefinition.Presets[RasterizerPreset.Default];
     }
 
     [DataContract]
@@ -57,5 +57,8 @@ namespace Molten.Graphics
 
         [DataMember]
         public ShaderDepthStencilDefinition DepthStencilState { get; set; }
+
+        [DataMember]
+        public ShaderRasterizerDefinition RasterizerState { get; set; }
     }
 }
