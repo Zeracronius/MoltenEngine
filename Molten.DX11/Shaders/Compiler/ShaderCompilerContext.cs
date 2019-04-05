@@ -9,7 +9,7 @@ namespace Molten.Graphics
 {
     internal class ShaderCompilerContext
     {
-        internal ShaderCompileResult Result = new ShaderCompileResult();
+        internal IShader Result;
 
         /// <summary>
         /// HLSL shader objects stored by entry-point name

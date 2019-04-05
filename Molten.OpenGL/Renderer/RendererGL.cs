@@ -76,7 +76,7 @@ namespace Molten.Graphics
             throw new NotImplementedException();
         }
 
-        protected override ShaderCompileResult OnCompileShader(in string source, in string filename)
+        protected override ShaderCompileResult OnCompileShader(TranslatedShaderInfo info, string filename)
         {
             throw new NotImplementedException();
         }

@@ -9,8 +9,8 @@
       {
         "name": "main",
         "iterations": 1,
-        "vertex": "BasicTexture.cs/VS",
-        "fragment": "BasicTexture.cs/PS"
+        "vertex": "BasicTexture.cs/Molten.Samples.Assets.BasicTetxureShader/VS",
+        "fragment": "BasicTexture.cs/Molten.Samples.Assets.BasicTetxureShader/PS"
       }
     ]
   }

@@ -20,7 +20,8 @@ namespace Molten.Graphics
         bool _surfaceResizeRequired;
         AntiAliasMode _requestedMultiSampleLevel = AntiAliasMode.None;
         internal AntiAliasMode MsaaLevel = AntiAliasMode.None;
-        Translator _shaderTranslator;
+        ShaderCache _shaderCache;
+
 
         /// <summary>
         /// Creates a new instance of a <see cref="MoltenRenderer"/> sub-type.
@@ -61,7 +62,7 @@ namespace Molten.Graphics
             settings.Log(Log, "Graphics");
             MsaaLevel = _requestedMultiSampleLevel = MsaaLevel;
             settings.MSAA.OnChanged += MSAA_OnChanged;
-            _shaderTranslator = new Translator("MoltenShaderCompiler");
+            _shaderCache = new ShaderCache(this, ShaderLanguage);
 
             OnInitialize(settings);
         }
@@ -289,29 +290,52 @@ namespace Molten.Graphics
 
         protected abstract void OnPostRenderCamera(SceneRenderData sceneData, RenderCamera camera, Timing time);
 
-        /// <summary>Compiles a set of shaders from the provided source string.</summary>
-        /// <param name="cSharpSource">The source code to be parsed and compiled.</param>
-        /// <param name="filename">The name of the source file. Used as a point of reference in debug/error messages only.</param>
+        /// <summary>
+        /// Compiles a shader using the current implementation of <see cref="MoltenRenderer"/>.
+        /// </summary>
+        /// <param name="definition"></param>
+        /// <param name="log"></param>
         /// <returns></returns>
-        public ShaderCompileResult CompileShader(string cSharpSource, string filename = null)
+        public IShader BuildShader(ShaderDefinition definition, Logger log, IShaderFileIncluder includer)
         {
-            TranslationResult result = _shaderTranslator.Translate(filename, cSharpSource, ShaderLanguage);
-            string shaderSource;
+            /* TODO:
+             *  - Content processor needs to populate ShaderDefinition.Filename
+             *  - Content processor needs to convert file paths to absolute
+             *  - Add Includes property to shader definition files. "includes": [ "file1", "file2" ]
+             *  - Some definitions may use the same shader file (or even multiple times within the same definition)
+             *      -- Store ShaderTranslationResult in ShaderCache
+             *      -- Do not cache include files (unless they also contain shader entry points)
+             *      -- This means translation can be skipped because the result is already known for at least some entry points of a shader definition
+             *      
+             *  - Populate MaterialDefinition or ComputeDefinition and forward to renderer implementation:
+             *      -- BuildMaterial(MaterialDefinition definition) - Returns an IMaterial
+             *      -- BuildCompute(ComputeDefinition definition) - Returns IComputeShader
+             *      -- Distinguish a compute shader from a material simply by checking if compute entry point is populated
+             *  
+             *  - Implement better error reporting and validation
+             */
 
-            // TODO we need to separate the XML definitions from the actual shader source.
-            // TODO may need to update mfx format so that the XML is in summaries
-            /// <chicken>This seems valid</chicken>
+            // If compute and other shader entry points are populated, we'll need to create both a material and a compute definition and forward them both individually.
 
-            if (result.Output.Count > 0)
+
+            TranslatedShaderInfo matInfo = new TranslatedShaderInfo();
+            foreach (ShaderPassDefinition pDef in definition.Passes)
             {
-                shaderSource = result.Output.Values.First().SourceCode;
-                return OnCompileShader(in shaderSource, in filename);
+                matInfo.Passes.Add(new TranslatedPassInfo()
+                {
+                    Vertex = _shaderCache.GetShader(pDef.VertexEntryPoint, definition.Includes, log, includer),
+                    Fragment = _shaderCache.GetShader(pDef.FragmentEntryPoint, definition.Includes, log, includer),
+                    Geometry = _shaderCache.GetShader(pDef.GeometryEntryPoint, definition.Includes, log, includer),
+                    Hull = _shaderCache.GetShader(pDef.HullEntryPoint, definition.Includes, log, includer),
+                    Domain = _shaderCache.GetShader(pDef.DomainEntryPoint, definition.Includes, log, includer),
+                    Compute = _shaderCache.GetShader(pDef.ComputeEntryPoint, definition.Includes, log, includer),
+                });
             }
 
-            return new ShaderCompileResult();
-        }
+            // TODO check if the shader is valid (e.g. material has at least vertex and pixel shader, or vertex and geometry when streaming, or hull + domain shaders).
 
-        protected abstract ShaderCompileResult OnCompileShader(in string source, in string filename);
+            return ShaderCompiler.Compile(matInfo);
+        }
 
         /// <summary>
         /// Occurs after render presentation is completed and profiler timing has been finalized for the current frame. Useful if you need to do some per-frame cleanup/resetting.
@@ -322,7 +346,7 @@ namespace Molten.Graphics
         public void Dispose()
         {
             OnDispose();
-            _shaderTranslator.Dispose();
+            _shaderCache.Dispose();
             OutputSurfaces.For(0, 1, (index, surface) =>
             {
                 surface.Dispose();
@@ -391,6 +415,8 @@ namespace Molten.Graphics
         /// Gets the <see cref="Logger"/> bound and dedicated to the current renderer.
         /// </summary>
         protected internal Logger Log { get; }
+
+        protected abstract IShaderCompiler ShaderCompiler { get; }
 
         /// <summary>
         /// Gets the renderer's <see cref="OverlayProvider"/> implementation.

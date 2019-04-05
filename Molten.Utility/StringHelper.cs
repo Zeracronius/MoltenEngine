@@ -24,5 +24,22 @@ namespace Molten
         {
             return encoding.GetBytes(str); ;
         }
+
+        public static string ConcatArray(string[] array, int startIndex, int count)
+        {
+            string result = "";
+            int endIndex = startIndex + count;
+
+            if (startIndex < 0 || startIndex >= array.Length)
+                throw new Exception("The start index is out of range. Must be greater or equal to 0 and less than array length.");
+
+            if (endIndex >= array.Length)
+                throw new IndexOutOfRangeException("The startIndex and count would go beyond the string array capacity.");
+
+            for (int i = startIndex; i < endIndex; i++)
+                result += array[i];
+
+            return result;
+        }
     }
 }

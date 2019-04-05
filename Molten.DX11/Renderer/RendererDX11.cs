@@ -34,6 +34,8 @@ namespace Molten.Graphics
         internal Material StandardMeshMaterial;
         internal Material StandardMeshMaterial_NoNormalMap;
 
+        HlslCompiler _shaderCompiler;
+
         public RendererDX11()
         {
             _steps = new Dictionary<Type, RenderStepBase>();
@@ -54,7 +56,7 @@ namespace Molten.Graphics
             Device = new DeviceDX11(Log, settings, _displayManager, settings.EnableDebugLayer);
             _resourceManager = new ResourceManager(this);
             _compute = new ComputeManager(this.Device);
-            ShaderCompiler = new HlslCompiler(this, Log);
+            _shaderCompiler = new HlslCompiler(this, Log);
             _clearedSurfaces = new HashSet<Texture2DDX11>();
 
             int maxBufferSize = (int)ByteMath.FromMegabytes(3.5);
@@ -65,33 +67,15 @@ namespace Molten.Graphics
             Device.SpriteBatcher = new SpriteBatcherDX11(this, 3000);
 
             InitializeMainSurfaces(BiggestWidth, BiggestHeight);
-            LoadDefaultShaders();
+            //LoadDefaultShaders();
         }
 
-        /// <summary>Compiels a set of shaders from the provided source string.</summary>
-        /// <param name="source">The source code to be parsed and compiled.</param>
-        /// <param name="filename">The name of the source file. Used as a point of reference in debug/error messages only.</param>
-        /// <returns></returns>
-        protected override ShaderCompileResult OnCompileShader(in string source, in string filename = null)
-        {
-            Include includer = null;
-
-            if (!string.IsNullOrWhiteSpace(filename))
-            {
-                FileInfo fInfo = new FileInfo(filename);
-                DirectoryInfo dir = fInfo.Directory;
-                includer = new HlslIncludeHandler(dir.ToString());
-            }
-
-            return ShaderCompiler.Compile(source, filename, includer);
-        }
-
-        private void LoadDefaultShaders()
-        {
-            ShaderCompileResult result = ShaderCompiler.CompileEmbedded("Molten.Graphics.Assets.gbuffer.mfx");
-            StandardMeshMaterial = result["material", "gbuffer"] as Material;
-            StandardMeshMaterial_NoNormalMap = result["material", "gbuffer-sans-nmap"] as Material;
-        }
+        //private void LoadDefaultShaders()
+        //{
+        //    ShaderCompileResult result = _shaderCompiler.CompileEmbedded("Molten.Graphics.Assets.gbuffer.mfx");
+        //    StandardMeshMaterial = result["material", "gbuffer"] as Material;
+        //    StandardMeshMaterial_NoNormalMap = result["material", "gbuffer-sans-nmap"] as Material;
+        //}
 
         public void DispatchCompute(IComputeTask task, int x, int y, int z)
         {
@@ -281,8 +265,6 @@ namespace Molten.Graphics
 
         public override IComputeManager Compute => _compute;
 
-        internal HlslCompiler ShaderCompiler { get; private set; }
-
         protected override OutputLanguage ShaderLanguage => OutputLanguage.HLSL;
 
         /// <summary>
@@ -290,5 +272,7 @@ namespace Molten.Graphics
         /// This is responsible for creating and destroying graphics resources, such as buffers, textures and surfaces.
         /// </summary>
         public override IResourceManager Resources => _resourceManager;
+
+        protected override IShaderCompiler ShaderCompiler => _shaderCompiler;
     }
 }

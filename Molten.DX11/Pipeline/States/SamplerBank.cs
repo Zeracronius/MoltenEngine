@@ -9,25 +9,17 @@ namespace Molten.Graphics
 {
     internal class SamplerBank : GraphicsStateBank<ShaderSampler, SamplerPreset>
     {
+        DeviceDX11 _device;
+
         internal SamplerBank(DeviceDX11 device)
         {
-            AddPreset(SamplerPreset.Default, new ShaderSampler(device)
-            {
-                AddressU = SamplerAddressMode.Wrap,
-                AddressV = SamplerAddressMode.Wrap,
-                AddressW = SamplerAddressMode.Wrap,
-            });
+            _device = device;
         }
 
-        internal override ShaderSampler GetPreset(SamplerPreset value)
+        protected override ShaderSampler CreatePreset(SamplerPreset preset)
         {
-            return _presets[(int)value];
+            return new ShaderSampler(_device, ShaderSamplerDefinition.Presets[preset]);
         }
     }
 
-    public enum SamplerPreset
-    {
-        /// <summary>The default blend mode. All address modes are set to <see cref="SamplerAddressMode.Wrap"/></summary>
-        Default = 0,
-    }
 }

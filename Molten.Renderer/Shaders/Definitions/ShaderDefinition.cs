@@ -8,8 +8,10 @@ using System.Threading.Tasks;
 namespace Molten.Graphics
 {
     [DataContract]
-    public class MaterialDefinition
+    public class ShaderDefinition
     {
+        public string FileName { get; internal set; }
+
         [DataMember]
         public string Name { get; set; }
 
@@ -17,7 +19,7 @@ namespace Molten.Graphics
         public string Description { get; set; }
 
         [DataMember]
-        public List<MaterialPassDefinition> Passes { get; } = new List<MaterialPassDefinition>();
+        public List<ShaderPassDefinition> Passes { get; } = new List<ShaderPassDefinition>();
 
         [DataMember]
         public ShaderBlendStateDefinition DefaultBlendState { get; set; } = ShaderBlendStateDefinition.Presets[BlendStatePreset.Default];
@@ -26,10 +28,12 @@ namespace Molten.Graphics
         public ShaderDepthStencilDefinition DepthStencilState { get; set; } = ShaderDepthStencilDefinition.Presets[DepthStencilPreset.Default];
 
         public ShaderRasterizerDefinition RasterizerState { get; set; } = ShaderRasterizerDefinition.Presets[RasterizerPreset.Default];
+
+        public List<string> Includes { get; set; } = new List<string>();
     }
 
     [DataContract]
-    public class MaterialPassDefinition
+    public class ShaderPassDefinition
     {
         [DataMember]
         public string Name { get; set; }
@@ -51,6 +55,9 @@ namespace Molten.Graphics
 
         [DataMember]
         public string DomainEntryPoint { get; set; }
+
+        [DataMember]
+        public string ComputeEntryPoint { get; set; }
 
         [DataMember]
         public ShaderBlendStateDefinition BlendState { get; set; }
