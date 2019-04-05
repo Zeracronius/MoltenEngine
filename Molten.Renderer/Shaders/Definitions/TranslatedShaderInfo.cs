@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharpShader;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,16 +16,12 @@ namespace Molten.Graphics
 
     public class TranslatedPassInfo
     {
-        public ShaderEntryPoint Vertex;
+        public Dictionary<EntryPointType, ShaderEntryPoint> EntryPoints = new Dictionary<EntryPointType, ShaderEntryPoint>();
 
-        public ShaderEntryPoint Fragment;
-
-        public ShaderEntryPoint Geometry;
-
-        public ShaderEntryPoint Hull;
-
-        public ShaderEntryPoint Domain;
-
-        public ShaderEntryPoint Compute;
+        public void AddEntryPoint(EntryPointType epType, ShaderEntryPoint ep)
+        {
+            if (ep != null)
+                EntryPoints.Add(epType, ep);
+        }
     }
 }

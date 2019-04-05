@@ -217,8 +217,6 @@
     <Compile Include="Shaders\Compiler\Parsers\ShaderPassParser.cs" />
     <Compile Include="Shaders\Compute\ComputeManager.cs" />
     <Compile Include="Shaders\Compute\ComputeTask.cs" />
-    <Compile Include="Shaders\DefaultIncludeHandler.cs" />
-    <Compile Include="Shaders\EmbeddedIncludeHandler.cs" />
     <Compile Include="Shaders\HlslShader.cs" />
     <Compile Include="Shaders\Materials\Material.cs" />
     <Compile Include="Shaders\HlslIncludeHandler.cs" />

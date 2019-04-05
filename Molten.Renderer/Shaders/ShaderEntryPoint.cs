@@ -13,10 +13,13 @@ namespace Molten.Graphics
 
         public readonly EntryPointInfo Info;
 
+        public string FinalSource;
+
         internal ShaderEntryPoint(ShaderTranslationResult result, EntryPointInfo ep)
         {
             Result = result;
             Info = ep;
+            FinalSource = result.SourceCode;
         }
     }
 }

@@ -11,17 +11,16 @@ using System.Xml;
 
 namespace Molten.Graphics
 {
-    internal class HlslCompiler : IShaderCompiler
+    internal class HlslCompiler : ShaderManagerBase
     {
         internal static readonly string[] NewLineSeparators = new string[] { "\n", Environment.NewLine };
         Dictionary<string, HlslSubCompiler> _subCompilers;
         Logger _log;
         RendererDX11 _renderer;
-        Include _defaultIncluder;
 
         Dictionary<string, ShaderNodeParser> _parsers;
 
-        internal HlslCompiler(RendererDX11 renderer, Logger log)
+        internal HlslCompiler(RendererDX11 renderer, Logger log) : base(renderer, SharpShader.OutputLanguage.HLSL)
         {
             // Detect and instantiate node parsers
             _parsers = new Dictionary<string, ShaderNodeParser>();
@@ -36,7 +35,6 @@ namespace Molten.Graphics
             _renderer = renderer;
             _log = log;
             _subCompilers = new Dictionary<string, HlslSubCompiler>();
-            _defaultIncluder = new EmbeddedIncludeHandler(typeof(EmbeddedIncludeHandler).Assembly);
 
             AddSubCompiler<MaterialCompiler>("material");
             AddSubCompiler<ComputeCompiler>("compute");
@@ -49,24 +47,34 @@ namespace Molten.Graphics
             _subCompilers.Add(nodeName, sub);
         }
 
-        internal IShader CompileEmbedded(string filename, Include includer = null)
+        //internal IShader CompileEmbedded(string filename, Include includer = null)
+        //{
+        //    string source = null;
+        //    using (Stream stream = EmbeddedResource.GetStream(filename, typeof(RendererDX11).Assembly))
+        //    {
+        //        using (StreamReader reader = new StreamReader(stream))
+        //            source = reader.ReadToEnd();
+        //    }
+
+        //    return Compile(source, filename, includer);
+        //}
+
+        protected override string Preprocess(ShaderEntryPoint ep, Logger log)
         {
-            string source = null;
-            using (Stream stream = EmbeddedResource.GetStream(filename, typeof(RendererDX11).Assembly))
+            string hlslError = null;
+            try
             {
-                using (StreamReader reader = new StreamReader(stream))
-                    source = reader.ReadToEnd();
+                Include includer = new HlslIncludeHandler(ep);
+                ep.FinalSource = ShaderBytecode.Preprocess(ep.Result.SourceCode, null, includer, out hlslError);
             }
-
-            return Compile(source, filename, includer);
+            catch (Exception e)
+            {
+                hlslError = e.Message;
+            }
+            return hlslError;
         }
 
-        public void Preprocess(TranslatedShaderInfo info)
-        {
-
-        }
-
-        public IShader Compile(TranslatedShaderInfo info)
+        protected override IShader Compile(TranslatedShaderInfo info, Logger log)
         {
             ShaderCompilerContext context = new ShaderCompilerContext() { Compiler = this };
             Dictionary<string, List<string>> headers = new Dictionary<string, List<string>>();

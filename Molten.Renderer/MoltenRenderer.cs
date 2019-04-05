@@ -20,7 +20,6 @@ namespace Molten.Graphics
         bool _surfaceResizeRequired;
         AntiAliasMode _requestedMultiSampleLevel = AntiAliasMode.None;
         internal AntiAliasMode MsaaLevel = AntiAliasMode.None;
-        ShaderCache _shaderCache;
 
 
         /// <summary>
@@ -62,7 +61,6 @@ namespace Molten.Graphics
             settings.Log(Log, "Graphics");
             MsaaLevel = _requestedMultiSampleLevel = MsaaLevel;
             settings.MSAA.OnChanged += MSAA_OnChanged;
-            _shaderCache = new ShaderCache(this, ShaderLanguage);
 
             OnInitialize(settings);
         }
@@ -291,53 +289,6 @@ namespace Molten.Graphics
         protected abstract void OnPostRenderCamera(SceneRenderData sceneData, RenderCamera camera, Timing time);
 
         /// <summary>
-        /// Compiles a shader using the current implementation of <see cref="MoltenRenderer"/>.
-        /// </summary>
-        /// <param name="definition"></param>
-        /// <param name="log"></param>
-        /// <returns></returns>
-        public IShader BuildShader(ShaderDefinition definition, Logger log, IShaderFileIncluder includer)
-        {
-            /* TODO:
-             *  - Content processor needs to populate ShaderDefinition.Filename
-             *  - Content processor needs to convert file paths to absolute
-             *  - Add Includes property to shader definition files. "includes": [ "file1", "file2" ]
-             *  - Some definitions may use the same shader file (or even multiple times within the same definition)
-             *      -- Store ShaderTranslationResult in ShaderCache
-             *      -- Do not cache include files (unless they also contain shader entry points)
-             *      -- This means translation can be skipped because the result is already known for at least some entry points of a shader definition
-             *      
-             *  - Populate MaterialDefinition or ComputeDefinition and forward to renderer implementation:
-             *      -- BuildMaterial(MaterialDefinition definition) - Returns an IMaterial
-             *      -- BuildCompute(ComputeDefinition definition) - Returns IComputeShader
-             *      -- Distinguish a compute shader from a material simply by checking if compute entry point is populated
-             *  
-             *  - Implement better error reporting and validation
-             */
-
-            // If compute and other shader entry points are populated, we'll need to create both a material and a compute definition and forward them both individually.
-
-
-            TranslatedShaderInfo matInfo = new TranslatedShaderInfo();
-            foreach (ShaderPassDefinition pDef in definition.Passes)
-            {
-                matInfo.Passes.Add(new TranslatedPassInfo()
-                {
-                    Vertex = _shaderCache.GetShader(pDef.VertexEntryPoint, definition.Includes, log, includer),
-                    Fragment = _shaderCache.GetShader(pDef.FragmentEntryPoint, definition.Includes, log, includer),
-                    Geometry = _shaderCache.GetShader(pDef.GeometryEntryPoint, definition.Includes, log, includer),
-                    Hull = _shaderCache.GetShader(pDef.HullEntryPoint, definition.Includes, log, includer),
-                    Domain = _shaderCache.GetShader(pDef.DomainEntryPoint, definition.Includes, log, includer),
-                    Compute = _shaderCache.GetShader(pDef.ComputeEntryPoint, definition.Includes, log, includer),
-                });
-            }
-
-            // TODO check if the shader is valid (e.g. material has at least vertex and pixel shader, or vertex and geometry when streaming, or hull + domain shaders).
-
-            return ShaderCompiler.Compile(matInfo);
-        }
-
-        /// <summary>
         /// Occurs after render presentation is completed and profiler timing has been finalized for the current frame. Useful if you need to do some per-frame cleanup/resetting.
         /// </summary>
         /// <param name="time">A timing instance.</param>
@@ -416,7 +367,7 @@ namespace Molten.Graphics
         /// </summary>
         protected internal Logger Log { get; }
 
-        protected abstract IShaderCompiler ShaderCompiler { get; }
+        public abstract ShaderManagerBase ShaderCompiler { get; }
 
         /// <summary>
         /// Gets the renderer's <see cref="OverlayProvider"/> implementation.

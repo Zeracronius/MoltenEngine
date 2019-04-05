@@ -273,6 +273,6 @@ namespace Molten.Graphics
         /// </summary>
         public override IResourceManager Resources => _resourceManager;
 
-        protected override IShaderCompiler ShaderCompiler => _shaderCompiler;
+        public override ShaderManagerBase ShaderCompiler => _shaderCompiler;
     }
 }

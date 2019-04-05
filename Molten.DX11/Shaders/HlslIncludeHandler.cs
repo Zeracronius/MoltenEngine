@@ -9,42 +9,39 @@ namespace Molten.Graphics
 {
     internal class HlslIncludeHandler : Include
     {
-        Stream _stream;
+        MemoryStream _stream;
         IDisposable _disposable;
-        string _directory;
+        ShaderEntryPoint _ep;
 
-        internal HlslIncludeHandler(string directory)
+        internal HlslIncludeHandler(ShaderEntryPoint ep)
         {
-            _directory = directory ?? "";
+            _ep = ep;
         }
 
-        public void Close(System.IO.Stream stream)
+        public void Close(Stream stream)
         {
             _stream.Close();
         }
 
-        public Stream Open(IncludeType type, string filename, Stream parentStream)
+        public Stream Open(IncludeType type, string className, Stream parentStream)
         {
-            _stream = new FileStream(Path.Combine(_directory, filename), FileMode.Open, FileAccess.Read, FileShare.Read);
+            _stream = new MemoryStream();
+            StreamWriter writer = new StreamWriter(_stream); // Stream writer does not need disposing. Does not use any extra resources, but will close stream if disposed.
+            writer.Write(_ep.Result.Includes[className].SourceCode);
+            writer.Flush();
+            _stream.Position = 0;
             return _stream;
         }
 
         public IDisposable Shadow
         {
-            get
-            {
-                return _disposable;
-            }
-            set
-            {
-                _disposable = value;
-            }
+            get => _disposable;
+            set => _disposable = value;
         }
 
         public void Dispose()
         {
-            if(_stream != null)
-                _stream.Dispose();
+            _stream?.Dispose();
         }
     }
 }
