@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace Molten.Graphics
 {
-    internal class MaterialLayoutValidator
+    internal class ShaderLayoutValidator
     {
-        internal bool Validate(MaterialPassCompileResult pResult)
+        internal bool Validate(ShaderPassCompileResult pResult)
         {
             bool valid = true;
-            MaterialPass pass = pResult.Pass;
+            HlslPass pass = pResult.Pass;
             ShaderComposition[] stages = pass.Compositions;
             ShaderComposition previous = null;
 
@@ -43,7 +43,7 @@ namespace Molten.Graphics
 
                     pResult.Errors.Add("Incompatible material I/O structure.");
                     pResult.Errors.Add("====================================");
-                    pResult.Errors.Add($"\tFilename: {pass.Material.Filename ?? "N/A"}");
+                    pResult.Errors.Add($"\tFilename: {pass.Parent.Filename ?? "N/A"}");
                     pResult.Errors.Add($"\tOutput -- {previousCompositionType.Name}:");
 
                     if (output.Elements.Length > 0)
@@ -71,11 +71,11 @@ namespace Molten.Graphics
                 CheckGeometryTessellationAdjacency(pResult);
         }
 
-        private bool CheckTessellationShaders(MaterialPassCompileResult pResult)
+        private bool CheckTessellationShaders(ShaderPassCompileResult pResult)
         {
             bool valid = true;
-            ShaderReflection hullRef = pResult.Reflections[MaterialPass.ID_HULL];
-            ShaderReflection domainRef = pResult.Reflections[MaterialPass.ID_DOMAIN];
+            ShaderReflection hullRef = pResult.Reflections[(int)ShaderType.HullShader];
+            ShaderReflection domainRef = pResult.Reflections[(int)ShaderType.DomainShader];
 
             if(hullRef != null && domainRef == null)
             {
@@ -90,12 +90,12 @@ namespace Molten.Graphics
             return valid;
         }
 
-        private bool CheckGeometryTessellationAdjacency(MaterialPassCompileResult pResult)
+        private bool CheckGeometryTessellationAdjacency(ShaderPassCompileResult pResult)
         {
             bool valid = true;
-            ShaderReflection geometryRef = pResult.Reflections[MaterialPass.ID_GEOMETRY];
-            ShaderReflection hullRef = pResult.Reflections[MaterialPass.ID_HULL];
-            ShaderReflection domainRef = pResult.Reflections[MaterialPass.ID_DOMAIN];
+            ShaderReflection geometryRef = pResult.Reflections[(int)ShaderType.GeometryShader];
+            ShaderReflection hullRef = pResult.Reflections[(int)ShaderType.HullShader];
+            ShaderReflection domainRef = pResult.Reflections[(int)ShaderType.DomainShader];
 
             if (geometryRef == null || hullRef == null || domainRef == null)
                 return valid;

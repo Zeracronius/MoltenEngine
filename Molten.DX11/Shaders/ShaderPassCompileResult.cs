@@ -1,5 +1,4 @@
 ﻿using SharpDX.D3DCompiler;
-using Molten.Graphics.Shaders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace Molten.Graphics
 {
-    internal class MaterialPassCompileResult
+    internal class ShaderPassCompileResult
     {
-        internal MaterialPassCompileResult(MaterialPass pass)
+        internal ShaderPassCompileResult(HlslPass pass)
         {
             Pass = pass;
-            Results = new CompilationResult[MaterialPass.ShaderTypes.Length];
-            Reflections = new ShaderReflection[MaterialPass.ShaderTypes.Length];
+            Results = new CompilationResult[HlslPass.ShaderTypes.Length];
+            Reflections = new ShaderReflection[HlslPass.ShaderTypes.Length];
         }
 
         internal CompilationResult[] Results;
@@ -25,7 +24,7 @@ namespace Molten.Graphics
 
         internal ShaderIOStructure OutputSructure;
 
-        internal MaterialPass Pass { get; private set; }
+        internal HlslPass Pass { get; private set; }
 
         internal CompilationResult VertexResult => Results[0];
 
@@ -37,6 +36,8 @@ namespace Molten.Graphics
 
         internal CompilationResult PixelResult => Results[4];
 
+        internal CompilationResult ComputeResult => Results[5];
+
         internal ShaderReflection VertexReflection => Reflections[0];
 
         internal ShaderReflection HullReflection => Reflections[1];
@@ -46,6 +47,8 @@ namespace Molten.Graphics
         internal ShaderReflection GeometryReflection => Reflections[3];
 
         internal ShaderReflection PixelReflection => Reflections[4];
+
+        internal ShaderReflection ComputeReflection => Reflections[5];
 
         internal List<string> Errors = new List<string>();
 

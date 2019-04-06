@@ -16,12 +16,16 @@ namespace Molten.Graphics
         internal GraphicsDepthState(DeviceDX11 device, GraphicsDepthState source) : base(device)
         {
             _desc = source._desc;
+            StencilReference = source.StencilReference;
+            WritePermission = source.WritePermission;
         }
 
         internal GraphicsDepthState(DeviceDX11 device) : this(device, ShaderDepthStencilDefinition.Presets[DepthStencilPreset.Default]) { }
 
         internal GraphicsDepthState(DeviceDX11 device, ShaderDepthStencilDefinition definition) : base(device)
         {
+            StencilReference = definition.StencilReference;
+            WritePermission = definition.WritePermission;
             _desc = new DepthStencilStateDescription()
             {
                 BackFace = new DepthStencilOperationDescription()
@@ -87,5 +91,13 @@ namespace Molten.Graphics
         {
             DisposeObject(ref State);
         }
+
+        /// <summary>Gets or sets the stencil reference value. The default value is 0.</summary>
+        internal int StencilReference { get; set; }
+
+        /// <summary>
+        /// Gets or sets the depth write permission. the default value is <see cref="GraphicsDepthWritePermission.Enabled"/>.
+        /// </summary>
+        internal GraphicsDepthWritePermission WritePermission { get; set; };
     }
 }

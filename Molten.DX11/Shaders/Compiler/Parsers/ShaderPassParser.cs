@@ -15,7 +15,7 @@ namespace Molten.Graphics
         {
             if (shader is Material material)
             {
-                MaterialPass pass = new MaterialPass(material);
+                HlslPass pass = new HlslPass(material);
 
                 for (int i = 0; i < material.Samplers.Length; i++)
                     pass.Samplers[i] = material.Samplers[i];

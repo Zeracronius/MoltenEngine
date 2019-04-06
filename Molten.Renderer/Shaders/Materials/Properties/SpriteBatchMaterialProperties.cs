@@ -8,11 +8,11 @@ namespace Molten.Graphics
 {
     public class SpriteBatchMaterialProperties : CommonShaderProperties
     {
-        public IShaderValue TextureSize { get; set; }
+        public IShaderValue TextureSize { get; }
 
-        public SpriteBatchMaterialProperties(IMaterial material) : base(material)
+        public SpriteBatchMaterialProperties(IShader shader) : base(shader)
         {
-            TextureSize = MapValue(material, "textureSize");
+            TextureSize = MapValue(shader, "textureSize");
         }
     }
 }

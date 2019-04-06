@@ -9,8 +9,6 @@ namespace Molten.Graphics
 {
     internal class ShaderCompilerContext
     {
-        internal IShader Result;
-
         /// <summary>
         /// HLSL shader objects stored by entry-point name
         /// </summary>

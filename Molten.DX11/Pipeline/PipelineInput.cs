@@ -14,7 +14,7 @@ namespace Molten.Graphics
     {
         static VertexBufferBinding _nullVertexBuffer = new VertexBufferBinding(null, 0, 0);
 
-        MaterialInputStage _materialStage;
+        ShaderInputStage _materialStage;
 
         PipelineBindSlot<BufferSegment, DeviceDX11, PipeDX11>[] _slotVertexBuffers;
         PipelineBindSlot<BufferSegment, DeviceDX11, PipeDX11> _slotIndexBuffer;
@@ -32,7 +32,7 @@ namespace Molten.Graphics
 
         public PipelineInput(PipeDX11 pipe) : base(pipe)
         {
-            _materialStage = new MaterialInputStage(pipe);
+            _materialStage = new ShaderInputStage(pipe);
             _inputAssembler = pipe.Context.InputAssembler;
 
             int vSlots = Device.Features.MaxVertexBufferSlots;
@@ -61,7 +61,7 @@ namespace Molten.Graphics
             Pipe.Context.InputAssembler.SetVertexBuffers(slot.SlotID, _nullVertexBuffer);
         }
 
-        internal void Refresh(MaterialPass pass, StateConditions conditions, PrimitiveTopology topology)
+        internal void Refresh(HlslPass pass, StateConditions conditions, PrimitiveTopology topology)
         {
             // Update shader pipeline stages
             _materialStage.Refresh(pass, conditions);

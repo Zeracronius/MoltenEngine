@@ -19,7 +19,7 @@ namespace Molten.Graphics
                 case Material material:
                     material.DefaultPSEntryPoint = node.InnerText;
                     return new NodeParseResult(NodeParseResultType.Success);
-                case MaterialPass pass:
+                case HlslPass pass:
                     pass.PixelShader.EntryPoint = node.InnerText;
                     return new NodeParseResult(NodeParseResultType.Success);
             }

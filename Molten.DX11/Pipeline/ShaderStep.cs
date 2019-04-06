@@ -22,7 +22,7 @@ namespace Molten.Graphics
         S _boundShader;
         Action<C, ShaderComposition<S>> _setCallback;
 
-        internal ShaderStep(PipeDX11 pipe, ShaderInputStage<H> input, C shaderStage, Action<C, ShaderComposition<S>> setCallback)
+        internal ShaderStep(PipeDX11 pipe, ShaderStage<H> input, C shaderStage, Action<C, ShaderComposition<S>> setCallback)
         {
             // Setup slots
             GraphicsDX11Features features = pipe.Device.Features;

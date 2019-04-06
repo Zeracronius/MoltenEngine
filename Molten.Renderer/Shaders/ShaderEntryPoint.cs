@@ -15,6 +15,8 @@ namespace Molten.Graphics
 
         public string FinalSource;
 
+        public string Error;
+
         internal ShaderEntryPoint(ShaderTranslationResult result, EntryPointInfo ep)
         {
             Result = result;

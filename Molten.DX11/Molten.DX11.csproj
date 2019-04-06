@@ -104,7 +104,7 @@
       <HintPath>..\packages\SharpDX.Mathematics.4.2.0\lib\net45\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="SharpShader.Core, Version=0.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpShader.Core.0.0.3-alpha2\lib\SharpShader.Core.dll</HintPath>
+      <HintPath>..\packages\SharpShader.Core.0.0.5-alpha\lib\SharpShader.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -169,14 +169,14 @@
     <Compile Include="Mesh\IndexedMesh.cs" />
     <Compile Include="Mesh\Mesh.cs" />
     <Compile Include="Pipeline\ComputeInputStage.cs" />
-    <Compile Include="Pipeline\MaterialInputStage.cs" />
+    <Compile Include="Pipeline\ShaderInputStage.cs" />
     <Compile Include="Pipeline\PipelineInput.cs" />
     <Compile Include="Pipeline\PipelineOutput.cs" />
     <Compile Include="Pipeline\PipelineShaderObject.cs" />
     <Compile Include="Pipeline\States\DepthStateBank.cs" />
     <Compile Include="Pipeline\States\BlendStateBank.cs" />
     <Compile Include="Pipeline\States\RasterizerStateBank.cs" />
-    <Compile Include="Pipeline\ShaderInputStage.cs" />
+    <Compile Include="Pipeline\ShaderStage.cs" />
     <Compile Include="Pipeline\ShaderStep.cs" />
     <Compile Include="PipeStateStack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -204,10 +204,7 @@
     <Compile Include="Shaders\HlslFoundation.cs" />
     <Compile Include="Shaders\ShaderStateBank.cs" />
     <Compile Include="ShaderModelExtensionsDX11.cs" />
-    <Compile Include="Shaders\Compiler\ComputeCompiler.cs" />
     <Compile Include="Shaders\Compiler\HlslCompiler.cs" />
-    <Compile Include="Shaders\Compiler\HlslSubCompiler.cs" />
-    <Compile Include="Shaders\Compiler\MaterialCompiler.cs" />
     <Compile Include="Shaders\Compiler\Parsers\MaterialAuthorParser.cs" />
     <Compile Include="Shaders\Compiler\Parsers\MaterialDescParser.cs" />
     <Compile Include="Shaders\Compiler\Parsers\NodeParseResult.cs" />
@@ -215,14 +212,11 @@
     <Compile Include="Shaders\Compiler\Parsers\ShaderNameParser.cs" />
     <Compile Include="Shaders\Compiler\Parsers\ShaderNodeParser.cs" />
     <Compile Include="Shaders\Compiler\Parsers\ShaderPassParser.cs" />
-    <Compile Include="Shaders\Compute\ComputeManager.cs" />
-    <Compile Include="Shaders\Compute\ComputeTask.cs" />
     <Compile Include="Shaders\HlslShader.cs" />
-    <Compile Include="Shaders\Materials\Material.cs" />
     <Compile Include="Shaders\HlslIncludeHandler.cs" />
-    <Compile Include="Shaders\Materials\MaterialLayoutValidator.cs" />
-    <Compile Include="Shaders\Materials\MaterialPass.cs" />
-    <Compile Include="Shaders\Materials\MaterialPassCompileResult.cs" />
+    <Compile Include="Shaders\ShaderLayoutValidator.cs" />
+    <Compile Include="Shaders\HlslPass.cs" />
+    <Compile Include="Shaders\ShaderPassCompileResult.cs" />
     <Compile Include="Shaders\ShaderSampler.cs" />
     <Compile Include="Shaders\ShaderComposition.cs" />
     <Compile Include="Shaders\ShaderIOStructure.cs" />

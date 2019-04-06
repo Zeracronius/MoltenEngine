@@ -14,11 +14,11 @@ namespace Molten.Graphics
 
         public IShaderValue EmissivePower { get; }
 
-        public ObjectMaterialProperties(IMaterial material) : base(material)
+        public ObjectMaterialProperties(IShader shader) : base(shader)
         {
-            World = MapValue(material, "world");
-            Wvp = MapValue(material, "wvp");
-            EmissivePower = MapValue(material, "emissivePower");
+            World = MapValue(shader, "world");
+            Wvp = MapValue(shader, "wvp");
+            EmissivePower = MapValue(shader, "emissivePower");
         }
     }
 }

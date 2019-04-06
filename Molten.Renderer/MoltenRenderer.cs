@@ -21,7 +21,6 @@ namespace Molten.Graphics
         AntiAliasMode _requestedMultiSampleLevel = AntiAliasMode.None;
         internal AntiAliasMode MsaaLevel = AntiAliasMode.None;
 
-
         /// <summary>
         /// Creates a new instance of a <see cref="MoltenRenderer"/> sub-type.
         /// </summary>
@@ -297,7 +296,6 @@ namespace Molten.Graphics
         public void Dispose()
         {
             OnDispose();
-            _shaderCache.Dispose();
             OutputSurfaces.For(0, 1, (index, surface) =>
             {
                 surface.Dispose();
@@ -327,11 +325,6 @@ namespace Molten.Graphics
         /// This is responsible for creating and destroying graphics resources, such as buffers, textures and surfaces.
         /// </summary>
         public abstract IResourceManager Resources { get; }
-
-        /// <summary>
-        /// Gets the compute manager attached to the current renderer.
-        /// </summary>
-        public abstract IComputeManager Compute { get; }
 
         /// <summary>
         /// Gets the name of the renderer implementation.

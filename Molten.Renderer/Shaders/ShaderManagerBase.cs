@@ -149,6 +149,6 @@ namespace Molten.Graphics
 
         protected abstract IShader Compile(TranslatedShaderInfo info, Logger log);
 
-        protected abstract string Preprocess(ShaderEntryPoint ep, Logger log);
+        protected abstract void Preprocess(ShaderEntryPoint ep, Logger log);
     }
 }

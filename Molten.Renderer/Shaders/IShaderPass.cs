@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Molten.Graphics
 {
-    public interface IMaterialPass
+    public interface IShaderPass
     {
         /// <summary>
         /// Gets the name of the pass.
@@ -21,6 +21,6 @@ namespace Molten.Graphics
         /// <summary>
         /// Gets the parent <see cref="IMaterial"/> instance.
         /// </summary>
-        IMaterial Material { get; }
+        IShader Parent { get; }
     }
 }

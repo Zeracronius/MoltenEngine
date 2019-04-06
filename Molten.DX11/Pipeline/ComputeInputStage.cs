@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Molten.Graphics
 {
-    internal class ComputeInputStage : ShaderInputStage<ComputeTask>
+    internal class ComputeInputStage : ShaderStage<ComputeTask>
     {
         ShaderStep<ComputeShader, ComputeShaderStage, ComputeTask> _cStage;
         PipelineBindSlot<PipelineShaderObject, DeviceDX11, PipeDX11>[] _slotUAVs;

@@ -14,11 +14,11 @@ namespace Molten.Graphics
 
         public IShaderValue EmissiveTexture { get; }
 
-        public GBufferTextureProperties(IMaterial material)  : base(material)
+        public GBufferTextureProperties(IShader shader)  : base(shader)
         {
-            DiffuseTexture = MapValue(material, "mapDiffuse");
-            NormalTexture = MapValue(material, "mapNormal");
-            EmissiveTexture = MapValue(material, "mapEmissive");
+            DiffuseTexture = MapValue(shader, "mapDiffuse");
+            NormalTexture = MapValue(shader, "mapNormal");
+            EmissiveTexture = MapValue(shader, "mapEmissive");
         }
     }
 }

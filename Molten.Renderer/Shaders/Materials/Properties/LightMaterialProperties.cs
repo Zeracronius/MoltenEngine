@@ -20,14 +20,14 @@ namespace Molten.Graphics
 
         public IShaderValue CameraPosition { get; }
 
-        public LightMaterialProperties(IMaterial material) : base(material)
+        public LightMaterialProperties(IShader shader) : base(shader)
         {
-            Data = MapValue(material, "LightData");
-            MapDiffuse = MapValue(material, "mapDiffuse");
-            MapNormal = MapValue(material, "mapNormal");
-            MapDepth = MapValue(material, "mapDepth");
-            InvViewProjection = MapValue(material, "invViewProjection");
-            CameraPosition = MapValue(material, "cameraPosition");
+            Data = MapValue(shader, "LightData");
+            MapDiffuse = MapValue(shader, "mapDiffuse");
+            MapNormal = MapValue(shader, "mapNormal");
+            MapDepth = MapValue(shader, "mapDepth");
+            InvViewProjection = MapValue(shader, "invViewProjection");
+            CameraPosition = MapValue(shader, "cameraPosition");
         }
     }
 }

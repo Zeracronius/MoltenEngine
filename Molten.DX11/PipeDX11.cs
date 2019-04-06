@@ -73,7 +73,7 @@ namespace Molten.Graphics
         }
 
         /// <summary>Dispatches a compute effect to the GPU.</summary>
-        public void Dispatch(ComputeTask task, int x, int y, int z)
+        public void Dispatch(HlslShader task, int x, int y, int z)
         {
             _computeStage.Shader = task;
 
@@ -147,7 +147,7 @@ namespace Molten.Graphics
             _stateStack.Pop();
         }
 
-        private GraphicsValidationResult ApplyState(Material material, MaterialPass pass,
+        private GraphicsValidationResult ApplyState(HlslShader material, HlslPass pass,
             GraphicsValidationMode mode,
             PrimitiveTopology topology)
         {
@@ -201,7 +201,7 @@ namespace Molten.Graphics
         /// <param name="vertexCount">The number of vertices to draw from the provided vertex buffer(s).</param>
         /// <param name="vertexStartIndex">The vertex to start drawing from.</param>
         /// <param name="topology">The primitive topolog to use when drawing with a NULL vertex buffer. Vertex buffers always override this when applied.</param>
-        public void Draw(Material material, int vertexCount, PrimitiveTopology topology, int vertexStartIndex = 0)
+        public void Draw(HlslShader material, int vertexCount, PrimitiveTopology topology, int vertexStartIndex = 0)
         {
 #if DEBUG
             if (!_drawInfo.Began)
@@ -213,7 +213,7 @@ namespace Molten.Graphics
             {
                 for (int j = 0; j < material.PassCount; j++)
                 {
-                    MaterialPass pass = material.Passes[j];
+                    HlslPass pass = material.Passes[j];
                     _drawResult = ApplyState(material, pass, GraphicsValidationMode.Unindexed, topology);
 
                     if (_drawResult == GraphicsValidationResult.Successful)
@@ -241,7 +241,7 @@ namespace Molten.Graphics
         /// <param name="topology">The expected topology of the indexed vertex data.</param>
         /// <param name="vertexStartIndex">The index of the first vertex.</param>
         /// <param name="instanceStartIndex">The index of the first instance element</param>
-        public void DrawInstanced(Material material,
+        public void DrawInstanced(HlslShader material,
             int vertexCountPerInstance,
             int instanceCount,
             PrimitiveTopology topology,
@@ -256,7 +256,7 @@ namespace Molten.Graphics
             {
                 for (int j = 0; j < material.PassCount; j++)
                 {
-                    MaterialPass pass = material.Passes[j];
+                    HlslPass pass = material.Passes[j];
                     _drawResult = ApplyState(material, pass, GraphicsValidationMode.Instanced, topology);
                     if (_drawResult == GraphicsValidationResult.Successful)
                     {
@@ -283,7 +283,7 @@ namespace Molten.Graphics
         /// <param name="indexCount">The number of indices to be drawn.</param>
         /// <param name="startIndex">The index to start drawing from.</param>
         /// <param name="topology">The toplogy to apply when drawing with a NULL vertex buffer. Vertex buffers always override this when applied.</param>
-        public void DrawIndexed(Material material,
+        public void DrawIndexed(HlslShader material,
             int indexCount,
             PrimitiveTopology topology,
             int vertexIndexOffset = 0,
@@ -297,7 +297,7 @@ namespace Molten.Graphics
             {
                 for (int j = 0; j < material.PassCount; j++)
                 {
-                    MaterialPass pass = material.Passes[j];
+                    HlslPass pass = material.Passes[j];
                     _drawResult = ApplyState(material, pass, GraphicsValidationMode.Indexed, topology);
                     if (_drawResult == GraphicsValidationResult.Successful)
                     {
@@ -325,7 +325,7 @@ namespace Molten.Graphics
         /// <param name="startIndex">The start index.</param>
         /// <param name="vertexIndexOffset">The index of the first vertex.</param>
         /// <param name="instanceStartIndex">The index of the first instance element</param>
-        public void DrawIndexedInstanced(Material material,
+        public void DrawIndexedInstanced(HlslShader material,
             int indexCountPerInstance,
             int instanceCount,
             PrimitiveTopology topology,
@@ -342,7 +342,7 @@ namespace Molten.Graphics
             {
                 for (int j = 0; j < material.PassCount; j++)
                 {
-                    MaterialPass pass = material.Passes[j];
+                    HlslPass pass = material.Passes[j];
                     _drawResult = ApplyState(material, pass, GraphicsValidationMode.InstancedIndexed, topology);
                     if (_drawResult == GraphicsValidationResult.Successful)
                     {

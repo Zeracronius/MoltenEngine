@@ -9,26 +9,21 @@ using System.Threading.Tasks;
 
 namespace Molten.Graphics
 {
-    public class MaterialPass : HlslFoundation, IMaterialPass
+    public class HlslPass : HlslFoundation, IShaderPass
     {
-        internal const int ID_VERTEX = 0;
-        internal const int ID_HULL = 1;
-        internal const int ID_DOMAIN = 2;
-        internal const int ID_GEOMETRY = 3;
-        internal const int ID_PIXEL = 4;
-
         internal readonly static ShaderType[] ShaderTypes = new ShaderType[]
         {
             ShaderType.VertexShader,
             ShaderType.HullShader,
             ShaderType.DomainShader,
             ShaderType.GeometryShader,
-            ShaderType.PixelShader
+            ShaderType.PixelShader,
+            ShaderType.ComputeShader,
         };
 
-        Material _parent;
+        HlslShader _parent;
 
-        internal MaterialPass(Material material) : base(material.Device)
+        internal HlslPass(HlslShader material) : base(material.Device)
         {
             _parent = material;
 
@@ -37,12 +32,14 @@ namespace Molten.Graphics
             DomainShader = new ShaderComposition<DomainShader>(true);
             GeometryShader = new ShaderComposition<GeometryShader>(true);
             PixelShader = new ShaderComposition<PixelShader>(false);
+            ComputeShader = new ShaderComposition<ComputeShader>(true);
             Compositions = new ShaderComposition[ShaderTypes.Length];
-            Compositions[ID_VERTEX] = VertexShader;
-            Compositions[ID_HULL] = HullShader;
-            Compositions[ID_DOMAIN] = DomainShader;
-            Compositions[ID_GEOMETRY] = GeometryShader;
-            Compositions[ID_PIXEL] = PixelShader;
+            Compositions[(int)ShaderType.VertexShader] = VertexShader;
+            Compositions[(int)ShaderType.HullShader] = HullShader;
+            Compositions[(int)ShaderType.DomainShader] = DomainShader;
+            Compositions[(int)ShaderType.GeometryShader] = GeometryShader;
+            Compositions[(int)ShaderType.PixelShader] = PixelShader;
+            Compositions[(int)ShaderType.ComputeShader] = ComputeShader;
         }
 
         internal GraphicsValidationResult ValidateInput(PrimitiveTopology topology)
@@ -70,6 +67,8 @@ namespace Molten.Graphics
 
         internal ShaderComposition<PixelShader> PixelShader;
 
+        internal ShaderComposition<ComputeShader> ComputeShader;
+
         internal InputPrimitive GeometryPrimitive;
 
         /// <summary>Gets or sets whether or not the pass will be run.</summary>
@@ -78,7 +77,7 @@ namespace Molten.Graphics
         /// </value>
         public bool IsEnabled { get; set; }
 
-        public IMaterial Material => _parent;
+        public IShader Parent => _parent;
 
     }
 }
