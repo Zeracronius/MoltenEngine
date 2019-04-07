@@ -268,8 +268,7 @@
     <EmbeddedResource Include="Assets\sprite.mfx" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Assets\gbuffer.mfx" />
-    <EmbeddedResource Include="Assets\gbuffer_common.mfx" />
+    <Compile Include="Assets\gbuffer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Molten.IO\Molten.IO.csproj">
@@ -301,6 +300,8 @@
     <EmbeddedResource Include="Assets\gbuffer_compose.mfx" />
     <EmbeddedResource Include="Assets\skybox.mfx" />
     <None Include="app.config" />
+    <None Include="Assets\gbuffer.json" />
+    <Compile Include="Assets\gbuffer_common.cs" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="..\Molten.DX.Shared\Molten.DX.Shared.projitems" Label="Shared" />

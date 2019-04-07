@@ -1,0 +1,45 @@
+[
+  {
+    "Name": "gbuffer",
+    "Description": "Standard deferred rendering g-buffer material.",
+    "Includes": [
+      "Molten.Assets.gbuffer_common.cs"
+    ],
+    "Passes": [
+      {
+        "Name": "main",
+        "Iterations": 1,
+        "Vertex": "Molten.Assets.gbuffer.cs/GBufferShader/VS",
+        "Fragment": "Molten.Assets.gbuffer.cs/GBufferShader/PS",
+        "Rasterizer": {
+          "Preset": "Default"
+        },
+        "Depth": {
+          "Preset": "Default"
+        }
+      }
+    ]
+  },
+
+  {
+    "Name": "gbuffer-sans-nmap",
+    "Description": "Deferred rendering g-buffer material, without normal mapping.",
+    "Includes": [
+      "Molten.Assets.gbuffer_common.cs"
+    ],
+    "Passes": [
+      {
+        "Name": "main",
+        "Iterations": 1,
+        "Vertex": "Molten.Assets.gbuffer/GBufferShader/VS",
+        "Fragment": "Molten.Assets.gbuffer/GBufferShader/PS_Basic",
+        "Rasterizer": {
+          "Preset": "Default"
+        },
+        "Depth": {
+          "Preset": "Default"
+        }
+      }
+    ]
+  }
+]
