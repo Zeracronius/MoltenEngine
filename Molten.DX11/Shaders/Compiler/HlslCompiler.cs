@@ -114,9 +114,8 @@ namespace Molten.Graphics
             //    context.Errors.Add($"{filename ?? "Shader source error"}: {hlslError}");
             //}
 
-            IShader shader = Parse(context, _renderer, info);
-
-            return shader;
+            HlslShader shader = Parse(context, _renderer, info);
+                return shader;
         }
 
         private List<string> GetHeaders(string headerTagName, string source)
@@ -504,7 +503,7 @@ namespace Molten.Graphics
 
         ShaderLayoutValidator _layoutValidator = new ShaderLayoutValidator();
 
-        private IShader Parse(ShaderCompilerContext context, RendererDX11 renderer, TranslatedShaderInfo info)
+        private HlslShader Parse(ShaderCompilerContext context, RendererDX11 renderer, TranslatedShaderInfo info)
         {
             HlslShader shader = new HlslShader(renderer.Device, context.Filename);
             if(info.Passes.Count == 0)
@@ -619,6 +618,7 @@ namespace Molten.Graphics
                 shader.Light = new LightMaterialProperties(shader);
             }
 
+            shader.DefaultResources = new IShaderResource[shader.Resources.Length];
             return shader;
         }
 

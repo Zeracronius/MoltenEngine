@@ -11,12 +11,16 @@
         "Iterations": 1,
         "Vertex": "Molten.Assets.gbuffer.cs/GBufferShader/VS",
         "Fragment": "Molten.Assets.gbuffer.cs/GBufferShader/PS",
-        "Rasterizer": {
-          "Preset": "Default"
-        },
-        "Depth": {
-          "Preset": "Default"
-        }
+
+        "Rasterizer": [
+          "Preset\": \"Default\""
+        ],
+
+        "Depth": [
+          {
+            "Preset": "Default"
+          }
+        ]
       }
     ]
   },
@@ -33,12 +37,16 @@
         "Iterations": 1,
         "Vertex": "Molten.Assets.gbuffer/GBufferShader/VS",
         "Fragment": "Molten.Assets.gbuffer/GBufferShader/PS_Basic",
-        "Rasterizer": {
-          "Preset": "Default"
-        },
-        "Depth": {
-          "Preset": "Default"
-        }
+
+        "Rasterizer": [
+          "Preset\": \"Default\""
+        ],
+
+        "Depth": [
+          {
+            "Preset": "Default"
+          }
+        ]
       }
     ]
   }

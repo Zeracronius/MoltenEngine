@@ -1,0 +1,36 @@
+[
+  {
+    "Name": "gbuffer-compose",
+    "Description": "Composes the various g-buffer results into a final scene.",
+    "Includes": [
+      "Molten.Assets.sprite_common.cs"
+    ],
+    "Passes": [
+      {
+        "Name": "main",
+        "Iterations": 1,
+        "Vertex": "Molten.Assets.sprite_common.cs/SpriteCommonShader/VS",
+        "Geometry": "Molten.Assets.sprite_common.cs/SpritecommonShader/GS",
+        "Fragment": "Molten.Assets.gbuffer_common.cs/GBufferCompose/PS_Compose",
+        "Blend": [
+          {
+            "Preset": "PreMultipliedAlpha"
+          }
+        ],
+        "Rasterizer": [
+          {
+            "Preset": "ScissorTest"
+          },
+          {
+            "Preset": "DefaultMultisample",
+            "Conditions": "Multisampling"
+          },
+          {
+            "Preset": "ScissorTestMultisample",
+            "Conditions": "ScissorTest, Multisampling"
+          }
+        ]
+      }
+    ]
+  }
+]
