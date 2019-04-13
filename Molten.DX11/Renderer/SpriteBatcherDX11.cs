@@ -92,7 +92,7 @@ namespace Molten.Graphics
                     item = Sprites[i];
                     range.Format = item.Format;
                     range.Texture = item.Texture;
-                    range.Material = item.Material;
+                    range.Material = item.Shader;
 
                     for (; i < end; i++, vertexPtr++)
                     {
@@ -101,7 +101,7 @@ namespace Molten.Graphics
 
                         // If the current item does not match that of the current range, start a new range.
                         if (item.Texture != range.Texture ||
-                            item.Material != range.Material ||
+                            item.Shader != range.Material ||
                             item.Format != range.Format)
                         {
                             range.VertexCount = i - range.Start;
@@ -112,7 +112,7 @@ namespace Molten.Graphics
                             range.Start = i;
                             range.Format = item.Format;
                             range.Texture = item.Texture;
-                            range.Material = item.Material;
+                            range.Material = item.Shader;
                         }
                     }
 

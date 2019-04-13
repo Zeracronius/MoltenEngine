@@ -32,7 +32,6 @@ namespace Molten.Graphics
                 })
                 {
                     AlphaToCoverageEnable = false,
-                    IndependentBlendEnable = false,
                 },
 
                 [BlendStatePreset.Additive] = new ShaderBlendStateDefinition(new ShaderBlendSlotDefinition()
@@ -48,7 +47,6 @@ namespace Molten.Graphics
                 })
                 {
                     AlphaToCoverageEnable = false,
-                    IndependentBlendEnable = false,
                 },
 
                 [BlendStatePreset.PreMultipliedAlpha] = new ShaderBlendStateDefinition(new ShaderBlendSlotDefinition()
@@ -66,7 +64,6 @@ namespace Molten.Graphics
                 })
                 {
                     AlphaToCoverageEnable = false,
-                    IndependentBlendEnable = false,
                 }
             };
 
@@ -97,9 +94,6 @@ namespace Molten.Graphics
 
         [DataMember]
         public bool AlphaToCoverageEnable { get; set; }
-
-        [DataMember]
-        public bool IndependentBlendEnable { get; set; }
 
         [DataMember]
         public Color4 BlendFactor { get; set; }
@@ -134,5 +128,7 @@ namespace Molten.Graphics
 
         [DataMember]
         public bool IsBlendEnabled { get; set; } = true;
+
+        public int TargetID { get; set; }
     }
 }

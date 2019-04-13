@@ -28,12 +28,27 @@ namespace Molten.Graphics
             _desc = new BlendStateDescription()
             {
                 AlphaToCoverageEnable = definition.AlphaToCoverageEnable,
-                IndependentBlendEnable = definition.IndependentBlendEnable,
             };
 
-            ShaderBlendSlotDefinition slotDef = definition.Targets[0];
+            // Use the first definition as the default for slot 0.
+            if (definition.Targets.Count > 0)
+                SetTargetSlot(definition.Targets[0], 0);
+            else
+                SetTargetSlot(ShaderBlendStateDefinition.Presets[BlendStatePreset.Default].Targets[0], 0);
 
-            _desc.RenderTarget[0] = new RenderTargetBlendDescription()
+            foreach (ShaderBlendSlotDefinition slotDef in definition.Targets)
+            {
+                SetTargetSlot(slotDef, slotDef.TargetID);
+                _desc.IndependentBlendEnable = (_desc.IndependentBlendEnable || (slotDef.TargetID > 0));
+            }
+
+            BlendFactor = definition.BlendFactor;
+            BlendSampleMask = definition.BlendSampleMask;
+        }
+
+        private void SetTargetSlot(ShaderBlendSlotDefinition slotDef, int id)
+        {
+            _desc.RenderTarget[id] = new RenderTargetBlendDescription()
             {
                 AlphaBlendOperation = (BlendOperation)slotDef.AlphaBlendOperation,
                 BlendOperation = (BlendOperation)slotDef.BlendOperation,
@@ -44,9 +59,6 @@ namespace Molten.Graphics
                 SourceAlphaBlend = (BlendOption)slotDef.SourceAlphaBlend,
                 SourceBlend = (BlendOption)slotDef.SourceBlend,
             };
-
-            BlendFactor = definition.BlendFactor;
-            BlendSampleMask = definition.BlendSampleMask;
         }
 
         internal RenderTargetBlendDescription GetSurfaceBlendState(int index)

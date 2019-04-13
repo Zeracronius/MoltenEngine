@@ -32,7 +32,7 @@ namespace Molten.Graphics
             public SpriteVertex Vertex;
             public SpriteFormat Format;
             public ITexture2D Texture;
-            public IMaterial Material;
+            public IShader Shader;
         }
        
         protected SpriteItem[] Sprites;
@@ -59,11 +59,11 @@ namespace Molten.Graphics
         /// <param name="text">The text to draw.</param>
         /// <param name="position">The position of the text.</param>
         /// <param name="color">The color of the text.</param>
-        /// <param name="material">The material to use when rendering the string of text.</param>
+        /// <param name="shader">The shader to use when rendering the string of text.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void DrawString(SpriteFont font, string text, Vector2F position, Color color, IMaterial material = null)
+        public void DrawString(SpriteFont font, string text, Vector2F position, Color color, IShader shader = null)
         {
-            DrawString(font, text, position, color, Vector2F.One, material);
+            DrawString(font, text, position, color, Vector2F.One, shader);
         }
 
         /// <summary>Draws a string of text sprites by using a <see cref="SpriteFont"/> to source the needed data..</summary>
@@ -72,8 +72,8 @@ namespace Molten.Graphics
         /// <param name="position">The position of the text.</param>
         /// <param name="color">The color of the text.</param>
         /// <param name="scale">The text scale. 1.0f is equivilent to the default size. 0.5f will half the size. 2.0f will double the size.</param>
-        /// <param name="material">The material to use when rendering the string of text.</param>
-        public void DrawString(SpriteFont font, string text, Vector2F position, Color color, Vector2F scale, IMaterial material = null)
+        /// <param name="shader">The shader to use when rendering the string of text.</param>
+        public void DrawString(SpriteFont font, string text, Vector2F position, Color color, Vector2F scale, IShader shader = null)
         {
             int strLength = text.Length;
 
@@ -88,7 +88,7 @@ namespace Molten.Graphics
 
                 SpriteItem item = GetItem();
                 item.Texture = font.UnderlyingTexture;
-                item.Material = null;
+                item.Shader = null;
                 item.Format = SpriteFormat.Sprite;
 
                 item.Vertex.Position = new Vector2F(charPos.X, charPos.Y + cache.YOffset);
@@ -172,7 +172,7 @@ namespace Molten.Graphics
                 {
                     SpriteItem item = GetItem();
                     item.Texture = null;
-                    item.Material = null;
+                    item.Shader = null;
                     item.Format = SpriteFormat.Circle;
 
                     item.Vertex.Position = center;
@@ -191,7 +191,7 @@ namespace Molten.Graphics
             {
                 SpriteItem item = GetItem();
                 item.Texture = null;
-                item.Material = null;
+                item.Shader = null;
                 item.Format = SpriteFormat.Circle;
 
                 item.Vertex.Position = center;
@@ -213,7 +213,7 @@ namespace Molten.Graphics
         {
             SpriteItem item = GetItem();
             item.Texture = null;
-            item.Material = null;
+            item.Shader = null;
             item.Format = SpriteFormat.Triangle;
 
             item.Vertex.Position = p1;
@@ -246,7 +246,7 @@ namespace Molten.Graphics
 
                 SpriteItem item = GetItem();
                 item.Texture = null;
-                item.Material = null;
+                item.Shader = null;
                 item.Format = SpriteFormat.Triangle;
 
                 item.Vertex.Position = points[i];
@@ -329,7 +329,7 @@ namespace Molten.Graphics
 
                     SpriteItem item = GetItem();
                     item.Texture = null;
-                    item.Material = null;
+                    item.Shader = null;
                     item.Format = SpriteFormat.Line;
 
                     item.Vertex.Position = p1;
@@ -418,7 +418,7 @@ namespace Molten.Graphics
 
                     SpriteItem item = GetItem();
                     item.Texture = null;
-                    item.Material = null;
+                    item.Shader = null;
                     item.Format = SpriteFormat.Line;
 
                     item.Vertex.Position = p1;
@@ -466,7 +466,7 @@ namespace Molten.Graphics
         {
             SpriteItem item = GetItem();
             item.Texture = null;
-            item.Material = null;
+            item.Shader = null;
             item.Format = SpriteFormat.Line;
 
             item.Vertex.Position = p1;
@@ -485,7 +485,7 @@ namespace Molten.Graphics
         /// <param name="destination">The rectangle defining the draw destination.</param>
         /// <param name="color">The color overlay/tiny of the sprite.</param>
         /// <param name="material">The material to apply to the rectangle. A value of null will use the default sprite-batch material.</param>
-        public void DrawRect(RectangleF destination, Color color, IMaterial material = null)
+        public void DrawRect(RectangleF destination, Color color, IShader material = null)
         {
             DrawRect(destination, color, 0, Vector2F.Zero, material);
         }
@@ -496,13 +496,13 @@ namespace Molten.Graphics
         /// <param name="rotation">Rotation in radians.</param>
         /// <param name="origin">The origin, as a unit value. 1.0f will set the origin to the bottom-right corner of the sprite.
         /// 0.0f will set the origin to the top-left. The origin acts as the center of the sprite.</param>
-        /// <param name="material">The material to use when rendering the sprite.</param>
+        /// <param name="shader">The material to use when rendering the sprite.</param>
         /// <param name="arraySlice">The texture array slice containing the source texture.</param>
-        public void DrawRect(RectangleF destination, Color color, float rotation, Vector2F origin, IMaterial material = null)
+        public void DrawRect(RectangleF destination, Color color, float rotation, Vector2F origin, IShader shader = null)
         {
             SpriteItem item = GetItem();
             item.Texture = null;
-            item.Material = material;
+            item.Shader = shader;
             item.Format = SpriteFormat.Sprite;
 
             item.Vertex.Position = destination.TopLeft;
@@ -519,9 +519,9 @@ namespace Molten.Graphics
         /// <param name="source"></param>
         /// <param name="destination"></param>
         /// <param name="color"></param>
-        /// <param name="material"></param>
+        /// <param name="shader"></param>
         /// <param name="arraySlice"></param>
-        public void Draw(ITexture2D texture, RectangleF source, RectangleF destination, Color color, float arraySlice = 0, IMaterial material = null)
+        public void Draw(ITexture2D texture, RectangleF source, RectangleF destination, Color color, float arraySlice = 0, IShader shader = null)
         {
             Draw(texture, 
                 source, 
@@ -530,7 +530,7 @@ namespace Molten.Graphics
                 color, 
                 0, 
                 Vector2F.Zero, 
-                material,
+                shader,
                 arraySlice);
         }
 
@@ -538,11 +538,11 @@ namespace Molten.Graphics
         /// <param name="texture"></param>
         /// <param name="destination"></param>
         /// <param name="color"></param>
-        /// <param name="material"></param>
-        public void Draw(ITexture2D texture, RectangleF destination, Color color, IMaterial material = null)
+        /// <param name="shader"></param>
+        public void Draw(ITexture2D texture, RectangleF destination, Color color, IShader shader = null)
         {
             RectangleF src = new RectangleF(0, 0, texture.Width, texture.Height);
-            Draw(texture, src, destination.TopLeft, destination.Size, color, 0, Vector2F.Zero, material, 0);
+            Draw(texture, src, destination.TopLeft, destination.Size, color, 0, Vector2F.Zero, shader, 0);
         }
 
         /// <summary>Adds a sprite to the batch.</summary>
@@ -551,21 +551,21 @@ namespace Molten.Graphics
         /// <param name="color"></param>
         /// <param name="rotation"></param>
         /// <param name="origin"></param>
-        public void Draw(ITexture2D texture, RectangleF destination, Color color, float rotation, Vector2F origin, IMaterial material = null)
+        public void Draw(ITexture2D texture, RectangleF destination, Color color, float rotation, Vector2F origin, IShader shader = null)
         {
             RectangleF src = new RectangleF(0, 0, texture.Width, texture.Height);
-            Draw(texture, src, destination.TopLeft, destination.Size, color, rotation, origin, material, 0);
+            Draw(texture, src, destination.TopLeft, destination.Size, color, rotation, origin, shader, 0);
         }
 
         /// <summary>Adds a sprite to the batch.</summary>
         /// <param name="texture"></param>
         /// <param name="position"></param>
         /// <param name="color"></param>
-        public void Draw(ITexture2D texture, Vector2F position, Color color, IMaterial material = null)
+        public void Draw(ITexture2D texture, Vector2F position, Color color, IShader shader = null)
         {
             RectangleF src = new RectangleF(0, 0, texture.Width, texture.Height);
             RectangleF dest = new RectangleF(position.X, position.Y, texture.Width, texture.Height);
-            Draw(texture, src, position, new Vector2F(src.Width, src.Height), color, 0, Vector2F.Zero, material, 0); 
+            Draw(texture, src, position, new Vector2F(src.Width, src.Height), color, 0, Vector2F.Zero, shader, 0); 
         }
 
         public void Draw(Sprite sprite)
@@ -588,12 +588,12 @@ namespace Molten.Graphics
         /// <param name="rotation">Rotation in radians.</param>
         /// <param name="origin">The origin, as a unit value. 1.0f will set the origin to the bottom-right corner of the sprite.
         /// 0.0f will set the origin to the top-left. The origin acts as the center of the sprite.</param>
-        /// <param name="material">The material to use when rendering the sprite.</param>
+        /// <param name="shader">The material to use when rendering the sprite.</param>
         /// <param name="arraySlice">The texture array slice containing the source texture.</param>
-        public void Draw(ITexture2D texture, Vector2F position, Color color, float rotation, Vector2F origin, float arraySlice = 0, IMaterial material = null)
+        public void Draw(ITexture2D texture, Vector2F position, Color color, float rotation, Vector2F origin, float arraySlice = 0, IShader shader = null)
         {
             RectangleF src = new RectangleF(0, 0, texture.Width, texture.Height);
-            Draw(texture, src, position, new Vector2F(src.Width, src.Height), color, rotation, origin, material, arraySlice);
+            Draw(texture, src, position, new Vector2F(src.Width, src.Height), color, rotation, origin, shader, arraySlice);
         }
 
         /// <summary>
@@ -607,7 +607,7 @@ namespace Molten.Graphics
         /// <param name="rotation">Rotation in radians.</param>
         /// <param name="origin">The origin, as a unit value. 1.0f will set the origin to the bottom-right corner of the sprite.
         /// 0.0f will set the origin to the top-left. The origin acts as the center of the sprite.</param>
-        /// <param name="material">The material to use when rendering the sprite.</param>
+        /// <param name="shader">The material to use when rendering the sprite.</param>
         /// <param name="arraySlice">The texture array slice containing the source texture.</param>
         public void Draw(ITexture2D texture, 
             RectangleF source, 
@@ -615,13 +615,13 @@ namespace Molten.Graphics
             Vector2F size, 
             Color color, 
             float rotation, 
-            Vector2F origin, 
-            IMaterial material, 
+            Vector2F origin,
+            IShader shader, 
             float arraySlice)
         {
             SpriteItem item = GetItem();
             item.Texture = texture;
-            item.Material = material;
+            item.Shader = shader;
             item.Format = SpriteFormat.Sprite;
 
             item.Vertex.Position = position;

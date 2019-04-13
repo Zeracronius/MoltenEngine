@@ -49,9 +49,5 @@ namespace Molten.Graphics
         internal ShaderReflection PixelReflection => Reflections[4];
 
         internal ShaderReflection ComputeReflection => Reflections[5];
-
-        internal List<string> Errors = new List<string>();
-
-        internal List<string> Messages = new List<string>();
     }
 }

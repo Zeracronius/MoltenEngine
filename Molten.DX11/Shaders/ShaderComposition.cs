@@ -26,19 +26,10 @@ namespace Molten.Graphics
         internal ShaderIOStructure OutputStructure;
 
         internal string EntryPoint;
-
-        internal bool Optional;
-
-        internal ShaderComposition(bool optional)
-        {
-            Optional = optional;
-        }
     }
 
     internal class ShaderComposition<T> : ShaderComposition where T : DeviceChild
     {
-        internal ShaderComposition(bool optional) : base(optional) { }
-
         /// <summary>The underlying, compiled HLSL shader object.</summary>
         internal T RawShader;
     }

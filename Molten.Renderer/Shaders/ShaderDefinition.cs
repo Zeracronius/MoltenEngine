@@ -19,16 +19,18 @@ namespace Molten.Graphics
         public string Description { get; set; }
 
         [DataMember]
-        public List<ShaderPassDefinition> Passes { get; } = new List<ShaderPassDefinition>();
+        public List<ShaderPassDefinition> Passes { get; set; } = new List<ShaderPassDefinition>();
 
         [DataMember]
-        public ShaderBlendStateDefinition DefaultBlend { get; set; } = ShaderBlendStateDefinition.Presets[BlendStatePreset.Default];
+        public List<ShaderBlendStateDefinition> DefaultBlend { get; set; } = new List<ShaderBlendStateDefinition>();
 
         [DataMember]
-        public ShaderDepthStencilDefinition DefaultDepthStencil { get; set; } = ShaderDepthStencilDefinition.Presets[DepthStencilPreset.Default];
+        public List<ShaderDepthStencilDefinition> DefaultDepthStencil { get; set; } = new List<ShaderDepthStencilDefinition>();
 
-        public ShaderRasterizerDefinition DefaultRasterizer { get; set; } = ShaderRasterizerDefinition.Presets[RasterizerPreset.Default];
+        [DataMember]
+        public List<ShaderRasterizerDefinition> DefaultRasterizer { get; set; } = new List<ShaderRasterizerDefinition>();
 
+        [DataMember]
         public List<string> Includes { get; set; } = new List<string>();
     }
 
@@ -60,12 +62,12 @@ namespace Molten.Graphics
         public string ComputeEntryPoint { get; set; }
 
         [DataMember]
-        public ShaderBlendStateDefinition Blend { get; set; }
+        public List<ShaderBlendStateDefinition> Blend { get; set; }
 
         [DataMember]
-        public ShaderDepthStencilDefinition DepthStencil { get; set; }
+        public List<ShaderDepthStencilDefinition> DepthStencil { get; set; }
 
         [DataMember]
-        public ShaderRasterizerDefinition Rasterizer { get; set; }
+        public List<ShaderRasterizerDefinition> Rasterizer { get; set; }
     }
 }

@@ -112,6 +112,9 @@ namespace Molten.Graphics
         public ComparisonMode DepthFunc { get; set; }
 
         [DataMember]
+        public StateConditions Conditions { get; set; }
+
+        [DataMember]
         public byte StencilReadMask { get; set; }
 
         [DataMember]

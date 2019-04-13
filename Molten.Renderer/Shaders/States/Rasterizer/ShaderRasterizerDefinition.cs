@@ -137,5 +137,8 @@ namespace Molten.Graphics
 
         [DataMember]
         public float SlopeScaledDepthBias { get; set; }
+
+        [DataMember]
+        public StateConditions Conditions { get; set; }
     }
 }

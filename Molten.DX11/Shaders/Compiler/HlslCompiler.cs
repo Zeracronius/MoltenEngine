@@ -74,48 +74,157 @@ namespace Molten.Graphics
 
             // TODO replace the XML parsing section of the sub compilers with information from TranslatedShaderInfo.
 
-            //// Pre-process HLSL source
-            //string hlslError = "";
-            //string finalSource = info;
-            //try
-            //{
-            //    finalSource = ShaderBytecode.Preprocess(finalSource, null, includer ?? _defaultIncluder, out hlslError);
-            //}
-            //catch (Exception e)
-            //{
-            //    hlslError = e.Message;
-            //}
-
-
-            //// Proceed if there is no pre-processor errors.
-            //if (!string.IsNullOrWhiteSpace(ep.Error) == false)
-            //{
-            //    context.Source = finalSource;
-            //    context.Filename = filename;
-
-            //    foreach (string nodeName in headers.Keys)
-            //    {
-            //        HlslSubCompiler com = _subCompilers[nodeName];
-            //        List<string> nodeHeaders = headers[nodeName];
-            //        foreach (string header in nodeHeaders)
-            //        {
-            //            List<IShader> parseResult = com.Parse(context, _renderer, header);
-
-            //            // Intialize the shader's default resource array, now that we have the final count of the shader's actual resources.
-            //            foreach (HlslShader shader in parseResult)
-            //                shader.DefaultResources = new IShaderResource[shader.Resources.Length];
-
-            //            context.Result = parseResult;
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    context.Errors.Add($"{filename ?? "Shader source error"}: {hlslError}");
-            //}
-
             HlslShader shader = Parse(context, _renderer, info);
-                return shader;
+            foreach (HlslMessage msg in context.Messages)
+            {
+                if (msg.Type == HlslMessageType.Message)
+                    log.WriteLine($"[SHADER][HLSL]{msg.Text}");
+                else
+                    log.WriteError($"[SHADER][HLSL]{msg.Text}");
+            }
+
+            return shader;
+        }
+
+        private HlslShader Parse(ShaderCompilerContext context, RendererDX11 renderer, TranslatedShaderInfo info)
+        {
+            HlslShader shader = new HlslShader(renderer.Device, context.Filename);
+            if (info.Passes.Count == 0)
+            {
+                shader.AddDefaultPass();
+                if (string.IsNullOrWhiteSpace(shader.Passes[0].VertexShader.EntryPoint))
+                {
+                    context.AddError($"Material '{shader.Name}' does not have a defined vertex shader entry point. Must be defined in the material or it's first pass.");
+                    return shader;
+                }
+            }
+
+            // Parse and compile passes based on definition info
+            foreach(TranslatedPassInfo pInfo in info.Passes)
+            {
+                HlslPass pass = new HlslPass(shader);
+                foreach(ShaderBlendStateDefinition blendDef in pInfo.Definition.Blend)
+                {
+                    GraphicsBlendState state = new GraphicsBlendState(_renderer.Device, blendDef);
+                    state = _renderer.Device.BlendBank.AddOrRetrieveExisting(state); // TODO can we just pass a definition straight in here? Avoid instantiating a state object?
+
+                    if (blendDef.Conditions == StateConditions.None)
+                        pass.BlendState.FillMissingWith(state);
+                    else
+                        pass.BlendState[blendDef.Conditions] = state;
+                }
+
+                foreach(ShaderDepthStencilDefinition depthDef in pInfo.Definition.DepthStencil)
+                {
+                    GraphicsDepthState state = new GraphicsDepthState(_renderer.Device, depthDef);
+                    state = _renderer.Device.DepthBank.AddOrRetrieveExisting(state); // TODO same question as blend states here.
+
+                    if (depthDef.Conditions == StateConditions.None)
+                        pass.DepthState.FillMissingWith(state);
+                    else
+                        pass.DepthState[depthDef.Conditions] = state;
+                }
+
+                foreach(ShaderRasterizerDefinition rasterDef in pInfo.Definition.Rasterizer)
+                {
+                    GraphicsRasterizerState state = new GraphicsRasterizerState(_renderer.Device, rasterDef);
+                    state = _renderer.Device.RasterizerBank.AddOrRetrieveExisting(state); // TODO same question as blend states here.
+
+                    if (rasterDef.Conditions == StateConditions.None)
+                        pass.RasterizerState.FillMissingWith(state);
+                    else
+                        pass.RasterizerState[rasterDef.Conditions] = state;
+                }
+
+                shader.AddPass(pass);
+            }
+
+            /* TODO:
+            *  - State info will need to be parsed alongside shader entry-point info. This used to be done in ParseHeader().
+            *  - Entry points will need compiling. We can still use HLSL reflection to confirm presence of various resources which may have been stripped during optimization/pre-process.
+            *  - XML parsing can be replaced with TranslatedPassInfo.
+            */
+
+            //// Proceed to compiling each material pass.
+            //ShaderPassCompileResult firstPassResult = null;
+            //foreach (HlslPass pass in shader.Passes)
+            //{
+            //    ShaderPassCompileResult passResult = CompilePass(context, pass);
+            //    firstPassResult = firstPassResult ?? passResult;
+
+            //    if (context.HasErrors)
+            //        return shader;
+            //}
+
+            // Validate the vertex input structure of all passes. Should match structure of first pass.
+            // Only run this if there is more than 1 pass.
+            if (shader.PassCount > 1)
+            {
+                ShaderIOStructure iStructure = shader.Passes[0].VertexShader.InputStructure;
+                for (int i = 1; i < shader.PassCount; i++)
+                {
+                    if (!shader.Passes[i].VertexShader.InputStructure.IsCompatible(iStructure))
+                        context.AddError($"Vertex input structure in Pass #{i + 1} in material '{shader.Name}' does not match structure of pass #1");
+                }
+            }
+
+            // No issues arose, lets add it to the material manager
+            if (!context.Messages.Any(m => m.Type == HlslMessageType.Error))
+            {
+                // Populate missing material states with default.
+                shader.DepthState.FillMissingWith(renderer.Device.DepthBank.GetPreset(DepthStencilPreset.Default));
+                shader.RasterizerState.FillMissingWith(renderer.Device.RasterizerBank.GetPreset(RasterizerPreset.Default));
+                shader.BlendState.FillMissingWith(renderer.Device.BlendBank.GetPreset(BlendStatePreset.Default));
+
+                ShaderSampler defaultSampler = renderer.Device.SamplerBank.GetPreset(SamplerPreset.Default);
+                for (int i = 0; i < shader.Samplers.Length; i++)
+                    shader.Samplers[i].FillMissingWith(defaultSampler);
+
+                // First, attempt to populate pass states with their first conditional state. 
+                // If that fails, fill remaining gaps with ones from material.
+                foreach (HlslPass pass in shader.Passes)
+                {
+                    pass.DepthState.FillMissingWith(pass.DepthState[StateConditions.None]);
+                    pass.DepthState.FillMissingWith(shader.DepthState);
+
+                    pass.RasterizerState.FillMissingWith(pass.RasterizerState[StateConditions.None]);
+                    pass.RasterizerState.FillMissingWith(shader.RasterizerState);
+
+                    pass.BlendState.FillMissingWith(pass.BlendState[StateConditions.None]);
+                    pass.BlendState.FillMissingWith(shader.BlendState);
+
+                    // Ensure the pass can at least fit all of the base material samplers (if any).
+                    if (pass.Samplers.Length < shader.Samplers.Length)
+                    {
+                        int oldLength = pass.Samplers.Length;
+                        Array.Resize(ref pass.Samplers, shader.Samplers.Length);
+                        for (int i = oldLength; i < pass.Samplers.Length; i++)
+                            pass.Samplers[i] = new ShaderStateBank<ShaderSampler>();
+                    }
+
+                    for (int i = 0; i < pass.Samplers.Length; i++)
+                    {
+                        pass.Samplers[i].FillMissingWith(pass.Samplers[i][StateConditions.None]);
+
+                        if (i >= shader.Samplers.Length)
+                            pass.Samplers[i].FillMissingWith(defaultSampler);
+                        else
+                            pass.Samplers[i].FillMissingWith(shader.Samplers[i]);
+                    }
+                }
+
+                shader.InputStructure = shader.Passes[0].VertexShader.InputStructure;
+                shader.InputStructureByteCode = firstPassResult.VertexResult.Bytecode;
+
+                shader.Scene = new SceneMaterialProperties(shader);
+                shader.Object = new ObjectMaterialProperties(shader);
+                shader.Textures = new GBufferTextureProperties(shader);
+                shader.SpriteBatch = new SpriteBatchMaterialProperties(shader);
+                shader.Light = new LightMaterialProperties(shader);
+            }
+
+            shader.DefaultResources = new IShaderResource[shader.Resources.Length];
+            return shader;
         }
 
         private List<string> GetHeaders(string headerTagName, string source)
@@ -132,7 +241,7 @@ namespace Molten.Graphics
             return headers;
         }
 
-        internal void ParserHeader(HlslFoundation foundation, ref string header, ShaderCompilerContext context)
+        internal void ParseHeader(HlslFoundation foundation, ref string header, ShaderCompilerContext context)
         {
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(header);
@@ -154,9 +263,9 @@ namespace Molten.Graphics
                 else
                 {
                     if (parentNode.ParentNode != null)
-                        context.Messages.Add($"Ignoring unsupported {parentNode.ParentNode.Name} tag '{parentNode.Name}'");
+                        context.AddMessage($"Ignoring unsupported {parentNode.ParentNode.Name} tag '{parentNode.Name}'");
                     else
-                        context.Messages.Add($"Ignoring unsupported root tag '{parentNode.Name}'");
+                        context.AddMessage($"Ignoring unsupported root tag '{parentNode.Name}'");
                 }
             }
         }
@@ -186,7 +295,7 @@ namespace Molten.Graphics
                 {
                     if (buffer.Variables.Length != varNames.Length)
                     {
-                        context.Errors.Add($"Material '{bufferName}' constant buffer does not have the correct number of variables ({varNames.Length})");
+                        context.AddError($"Material '{bufferName}' constant buffer does not have the correct number of variables ({varNames.Length})");
                         return false;
                     }
 
@@ -197,7 +306,7 @@ namespace Molten.Graphics
 
                         if (variable.Name != expectedName)
                         {
-                            context.Errors.Add($"Material '{bufferName}' constant variable #{i + 1} is incorrect: Named '{variable.Name}' instead of '{expectedName}'");
+                            context.AddError($"Material '{bufferName}' constant variable #{i + 1} is incorrect: Named '{variable.Name}' instead of '{expectedName}'");
                             return false;
                         }
                     }
@@ -241,7 +350,7 @@ namespace Molten.Graphics
                                 Array.Resize(ref shader.ConstBuffers, bindPoint + 1);
 
                             if (shader.ConstBuffers[bindPoint] != null && shader.ConstBuffers[bindPoint].BufferName != binding.Name)
-                                context.Messages.Add($"Material constant buffer '{shader.ConstBuffers[bindPoint].BufferName}' was overwritten by buffer '{binding.Name}' at the same register (b{bindPoint}).");
+                                context.AddMessage($"Material constant buffer '{shader.ConstBuffers[bindPoint].BufferName}' was overwritten by buffer '{binding.Name}' at the same register (b{bindPoint}).");
 
                             shader.ConstBuffers[bindPoint] = GetConstantBuffer(context, shader, buffer);
                             composition.ConstBufferIds.Add(bindPoint);
@@ -495,132 +604,13 @@ namespace Molten.Graphics
 
                 string msg = string.IsNullOrWhiteSpace(context.Filename) ? lines[i] : (context.Filename + ": " + lines[i]);
                 if (lines[i].Contains("error"))
-                    context.Errors.Add(msg);
+                    context.AddError(msg);
                 else
-                    context.Messages.Add(msg);
+                    context.AddMessage(msg);
             }
         }
 
         ShaderLayoutValidator _layoutValidator = new ShaderLayoutValidator();
-
-        private HlslShader Parse(ShaderCompilerContext context, RendererDX11 renderer, TranslatedShaderInfo info)
-        {
-            HlslShader shader = new HlslShader(renderer.Device, context.Filename);
-            if(info.Passes.Count == 0)
-            {
-                shader.AddDefaultPass();
-                if (string.IsNullOrWhiteSpace(shader.Passes[0].VertexShader.EntryPoint))
-                {
-                    context.Errors.Add($"Material '{shader.Name}' does not have a defined vertex shader entry point. Must be defined in the material or it's first pass.");
-                    return shader;
-                }
-            }
-
-            //try
-            //{
-            //    context.Compiler.ParserHeader(shader, ref header, context);
-            //    if (shader.Passes == null || shader.Passes.Length == 0)
-            //    {
-            //        shader.AddDefaultPass();
-            //        if (string.IsNullOrWhiteSpace(shader.Passes[0].VertexShader.EntryPoint))
-            //        {
-            //            context.Errors.Add($"Material '{shader.Name}' does not have a defined vertex shader entry point. Must be defined in the material or it's first pass.");
-            //            return shader;
-            //        }
-            //    }
-            //}
-            //catch (Exception e)
-            //{
-            //    context.Errors.Add($"{shader.Name ?? "Material header error"}: {e.Message}");
-            //    renderer.Device.Log.WriteError(e);
-            //    return shader;
-            //}
-
-            // Proceed to compiling each material pass.
-            ShaderPassCompileResult firstPassResult = null;
-            foreach (HlslPass pass in shader.Passes)
-            {
-                ShaderPassCompileResult passResult = CompilePass(context, pass);
-                firstPassResult = firstPassResult ?? passResult;
-                context.Messages.AddRange(passResult.Messages);
-
-                if (passResult.Errors.Count > 0)
-                {
-                    context.Errors.AddRange(passResult.Errors);
-                    return shader;
-                }
-            }
-
-            // Validate the vertex input structure of all passes. Should match structure of first pass.
-            // Only run this if there is more than 1 pass.
-            if (shader.PassCount > 1)
-            {
-                ShaderIOStructure iStructure = shader.Passes[0].VertexShader.InputStructure;
-                for (int i = 1; i < shader.PassCount; i++)
-                {
-                    if (!shader.Passes[i].VertexShader.InputStructure.IsCompatible(iStructure))
-                        context.Errors.Add($"Vertex input structure in Pass #{i + 1} in material '{shader.Name}' does not match structure of pass #1");
-                }
-            }
-
-            // No issues arose, lets add it to the material manager
-            if (context.Errors.Count == 0)
-            {
-                // Populate missing material states with default.
-                shader.DepthState.FillMissingWith(renderer.Device.DepthBank.GetPreset(DepthStencilPreset.Default));
-                shader.RasterizerState.FillMissingWith(renderer.Device.RasterizerBank.GetPreset(RasterizerPreset.Default));
-                shader.BlendState.FillMissingWith(renderer.Device.BlendBank.GetPreset(BlendStatePreset.Default));
-
-                ShaderSampler defaultSampler = renderer.Device.SamplerBank.GetPreset(SamplerPreset.Default);
-                for (int i = 0; i < shader.Samplers.Length; i++)
-                    shader.Samplers[i].FillMissingWith(defaultSampler);
-
-                // First, attempt to populate pass states with their first conditional state. 
-                // If that fails, fill remaining gaps with ones from material.
-                foreach (HlslPass pass in shader.Passes)
-                {
-                    pass.DepthState.FillMissingWith(pass.DepthState[StateConditions.None]);
-                    pass.DepthState.FillMissingWith(shader.DepthState);
-
-                    pass.RasterizerState.FillMissingWith(pass.RasterizerState[StateConditions.None]);
-                    pass.RasterizerState.FillMissingWith(shader.RasterizerState);
-
-                    pass.BlendState.FillMissingWith(pass.BlendState[StateConditions.None]);
-                    pass.BlendState.FillMissingWith(shader.BlendState);
-
-                    // Ensure the pass can at least fit all of the base material samplers (if any).
-                    if (pass.Samplers.Length < shader.Samplers.Length)
-                    {
-                        int oldLength = pass.Samplers.Length;
-                        Array.Resize(ref pass.Samplers, shader.Samplers.Length);
-                        for (int i = oldLength; i < pass.Samplers.Length; i++)
-                            pass.Samplers[i] = new ShaderStateBank<ShaderSampler>();
-                    }
-
-                    for (int i = 0; i < pass.Samplers.Length; i++)
-                    {
-                        pass.Samplers[i].FillMissingWith(pass.Samplers[i][StateConditions.None]);
-
-                        if (i >= shader.Samplers.Length)
-                            pass.Samplers[i].FillMissingWith(defaultSampler);
-                        else
-                            pass.Samplers[i].FillMissingWith(shader.Samplers[i]);
-                    }
-                }
-
-                shader.InputStructure = shader.Passes[0].VertexShader.InputStructure;
-                shader.InputStructureByteCode = firstPassResult.VertexResult.Bytecode;
-
-                shader.Scene = new SceneMaterialProperties(shader);
-                shader.Object = new ObjectMaterialProperties(shader);
-                shader.Textures = new GBufferTextureProperties(shader);
-                shader.SpriteBatch = new SpriteBatchMaterialProperties(shader);
-                shader.Light = new LightMaterialProperties(shader);
-            }
-
-            shader.DefaultResources = new IShaderResource[shader.Resources.Length];
-            return shader;
-        }
 
         private ShaderPassCompileResult CompilePass(ShaderCompilerContext context, HlslPass pass)
         {
@@ -629,7 +619,7 @@ namespace Molten.Graphics
             // Compile each stage of the material pass.
             for (int i = 0; i < HlslPass.ShaderTypes.Length; i++)
             {
-                if (pass.Compositions[i].Optional && string.IsNullOrWhiteSpace(pass.Compositions[i].EntryPoint))
+                if (string.IsNullOrWhiteSpace(pass.Compositions[i].EntryPoint))
                     continue;
 
                 if (Compile(pass.Compositions[i].EntryPoint, HlslPass.ShaderTypes[i], context, out result.Results[i]))
@@ -638,7 +628,7 @@ namespace Molten.Graphics
                 }
                 else
                 {
-                    result.Errors.Add($"{context.Filename}: Failed to compile {HlslPass.ShaderTypes[i]} stage of material pass.");
+                    context.AddError($"{context.Filename}: Failed to compile {HlslPass.ShaderTypes[i]} stage of material pass.");
                     return result;
                 }
             }
@@ -664,35 +654,35 @@ namespace Molten.Graphics
             if (pResult.VertexResult != null)
             {
                 if (!BuildStructure(context, shader, pResult.VertexReflection, pResult.VertexResult, pass.VertexShader))
-                    pResult.Errors.Add($"Invalid vertex shader structure for '{pResult.Pass.VertexShader.EntryPoint}' in pass '{pResult.Pass.Name}'.");
+                    context.AddError($"Invalid vertex shader structure for '{pResult.Pass.VertexShader.EntryPoint}' in pass '{pResult.Pass.Name}'.");
             }
 
             // Hull Shader
             if (pResult.HullResult != null)
             {
                 if (!BuildStructure(context, shader, pResult.HullReflection, pResult.HullResult, pass.HullShader))
-                    pResult.Errors.Add($"Invalid hull shader structure for '{pResult.Pass.HullShader.EntryPoint}' in pass '{pResult.Pass.Name}'.");
+                    context.AddError($"Invalid hull shader structure for '{pResult.Pass.HullShader.EntryPoint}' in pass '{pResult.Pass.Name}'.");
             }
 
             // Domain Shader
             if (pResult.DomainResult != null)
             {
                 if (!BuildStructure(context, shader, pResult.DomainReflection, pResult.DomainResult, pass.DomainShader))
-                    pResult.Errors.Add($"Invalid domain shader structure for '{pResult.Pass.DomainShader.EntryPoint}' in pass '{pResult.Pass.Name}'.");
+                    context.AddError($"Invalid domain shader structure for '{pResult.Pass.DomainShader.EntryPoint}' in pass '{pResult.Pass.Name}'.");
             }
 
             // Geometry Shader
             if (pResult.GeometryResult != null)
             {
                 if (!BuildStructure(context, shader, pResult.GeometryReflection, pResult.GeometryResult, pass.GeometryShader))
-                    pResult.Errors.Add($"Invalid geometry shader structure for '{pResult.Pass.GeometryShader.EntryPoint}' in pass '{pResult.Pass.Name}'.");
+                    context.AddError($"Invalid geometry shader structure for '{pResult.Pass.GeometryShader.EntryPoint}' in pass '{pResult.Pass.Name}'.");
             }
 
             // PixelShader Shader
             if (pResult.PixelResult != null)
             {
                 if (!BuildStructure(context, shader, pResult.PixelReflection, pResult.PixelResult, pass.PixelShader))
-                    pResult.Errors.Add($"Invalid pixel shader structure for '{pResult.Pass.PixelShader.EntryPoint}' in pass '{pResult.Pass.Name}'.");
+                    context.AddError($"Invalid pixel shader structure for '{pResult.Pass.PixelShader.EntryPoint}' in pass '{pResult.Pass.Name}'.");
             }
         }
     }

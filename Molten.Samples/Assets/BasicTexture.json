@@ -2,15 +2,17 @@
   {
     "Name": "position-texture",
     "Description": "A simple shader which renders 3D messhes with position and 2D UV data.",
-    "DefaultBlendState": {
-      "preset": "PreMultipliedAlpha"
-    },
+    "DefaultBlend": [
+      {
+        "Preset": "PreMultipliedAlpha"
+      }
+    ],
     "Passes": [
       {
-        "name": "main",
-        "iterations": 1,
-        "vertex": "BasicTexture.cs/Molten.Samples.Assets.BasicTetxureShader/VS",
-        "fragment": "BasicTexture.cs/Molten.Samples.Assets.BasicTetxureShader/PS"
+        "Name": "main",
+        "Iterations": 1,
+        "Vertex": "BasicTexture.cs/Molten.Samples.Assets.BasicTetxureShader/VS",
+        "Fragment": "BasicTexture.cs/Molten.Samples.Assets.BasicTetxureShader/PS"
       }
     ]
   }

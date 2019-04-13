@@ -193,8 +193,6 @@
     <Compile Include="Renderer\Tasks\TextureResolve.cs" />
     <Compile Include="ResourceManager.cs" />
     <Compile Include="Shaders\Compiler\Parsers\SamplerNodeParser.cs" />
-    <Compile Include="Shaders\Compiler\Parsers\BlendNodeParser.cs" />
-    <Compile Include="Shaders\Compiler\Parsers\DepthNodeParser.cs" />
     <Compile Include="Shaders\Compiler\Parsers\ShaderPSParser.cs" />
     <Compile Include="Shaders\Compiler\Parsers\ShaderHSParser.cs" />
     <Compile Include="Shaders\Compiler\Parsers\ShaderDSParser.cs" />
@@ -202,7 +200,6 @@
     <Compile Include="Shaders\Compiler\Parsers\ShaderVSParser.cs" />
     <Compile Include="Shaders\Compiler\Parsers\ShaderIterationParser.cs" />
     <Compile Include="Shaders\Compiler\ShaderCompilerContext.cs" />
-    <Compile Include="Shaders\Compiler\Parsers\RasterizerNodeParser.cs" />
     <Compile Include="Shaders\HlslFoundation.cs" />
     <Compile Include="Shaders\ShaderStateBank.cs" />
     <Compile Include="ShaderModelExtensionsDX11.cs" />

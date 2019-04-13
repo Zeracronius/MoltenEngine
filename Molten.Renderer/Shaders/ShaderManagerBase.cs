@@ -52,10 +52,10 @@ namespace Molten.Graphics
             // If compute and other shader entry points are populated, we'll need to create both a material and a compute definition and forward them both individually.
 
 
-            TranslatedShaderInfo matInfo = new TranslatedShaderInfo();
+            TranslatedShaderInfo matInfo = new TranslatedShaderInfo(definition);
             foreach (ShaderPassDefinition pDef in definition.Passes)
             {
-                TranslatedPassInfo pInfo = new TranslatedPassInfo();
+                TranslatedPassInfo pInfo = new TranslatedPassInfo(pDef);
                 pInfo.AddEntryPoint(EntryPointType.VertexShader, GetShader(pDef.VertexEntryPoint, definition.Includes, log));
                 pInfo.AddEntryPoint(EntryPointType.FragmentShader, GetShader(pDef.FragmentEntryPoint, definition.Includes, log));
                 pInfo.AddEntryPoint(EntryPointType.GeometryShader, GetShader(pDef.GeometryEntryPoint, definition.Includes, log));
