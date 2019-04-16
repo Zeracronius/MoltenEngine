@@ -22,12 +22,11 @@ namespace Molten.Graphics
 #endif
 
         internal static readonly string[] NewLineSeparators = new string[] { "\n", Environment.NewLine };
-        Logger _log;
         RendererDX11 _renderer;
 
         Dictionary<string, ShaderNodeParser> _parsers;
 
-        internal HlslCompiler(RendererDX11 renderer, Logger log) : base(renderer, SharpShader.OutputLanguage.HLSL)
+        internal HlslCompiler(RendererDX11 renderer) : base(renderer, SharpShader.OutputLanguage.HLSL)
         {
             // Detect and instantiate node parsers
             _parsers = new Dictionary<string, ShaderNodeParser>();
@@ -40,7 +39,6 @@ namespace Molten.Graphics
             }
 
             _renderer = renderer;
-            _log = log;
         }
 
         //internal IShader CompileEmbedded(string filename, Include includer = null)
@@ -74,7 +72,7 @@ namespace Molten.Graphics
 
             // TODO replace the XML parsing section of the sub compilers with information from TranslatedShaderInfo.
 
-            HlslShader shader = Parse(context, _renderer, info);
+            HlslShader shader = Parse(context, _renderer, info, log);
             foreach (HlslMessage msg in context.Messages)
             {
                 if (msg.Type == HlslMessageType.Message)
@@ -86,7 +84,7 @@ namespace Molten.Graphics
             return shader;
         }
 
-        private HlslShader Parse(ShaderCompilerContext context, RendererDX11 renderer, TranslatedShaderInfo info)
+        private HlslShader Parse(ShaderCompilerContext context, RendererDX11 renderer, TranslatedShaderInfo info, Logger log)
         {
             HlslShader shader = new HlslShader(renderer.Device, context.Filename);
             if (info.Passes.Count == 0)
@@ -103,7 +101,9 @@ namespace Molten.Graphics
             foreach(TranslatedPassInfo pInfo in info.Passes)
             {
                 HlslPass pass = new HlslPass(shader);
-                foreach(ShaderBlendStateDefinition blendDef in pInfo.Definition.Blend)
+                ShaderPassCompileResult passResult = CompilePass(context, pass, log);
+
+                foreach (ShaderBlendStateDefinition blendDef in pInfo.Definition.Blend)
                 {
                     GraphicsBlendState state = new GraphicsBlendState(_renderer.Device, blendDef);
                     state = _renderer.Device.BlendBank.AddOrRetrieveExisting(state); // TODO can we just pass a definition straight in here? Avoid instantiating a state object?
@@ -612,7 +612,7 @@ namespace Molten.Graphics
 
         ShaderLayoutValidator _layoutValidator = new ShaderLayoutValidator();
 
-        private ShaderPassCompileResult CompilePass(ShaderCompilerContext context, HlslPass pass)
+        private ShaderPassCompileResult CompilePass(ShaderCompilerContext context, HlslPass pass, Logger log)
         {
             ShaderPassCompileResult result = new ShaderPassCompileResult(pass);
 
@@ -638,7 +638,7 @@ namespace Molten.Graphics
                 pass.GeometryPrimitive = result.Reflections[(int)ShaderType.GeometryShader].GeometryShaderSInputPrimitive;
 
             // Validate I/O structure of each shader stage.
-            if (_layoutValidator.Validate(result))
+            if (_layoutValidator.Validate(result, log))
                 BuildPassStructure(context, result);
 
             return result;

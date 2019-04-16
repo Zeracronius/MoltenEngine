@@ -27,12 +27,12 @@ namespace Molten.Graphics
         {
             _parent = material;
 
-            VertexShader = new ShaderComposition<VertexShader>(false);
-            HullShader = new ShaderComposition<HullShader>(true);
-            DomainShader = new ShaderComposition<DomainShader>(true);
-            GeometryShader = new ShaderComposition<GeometryShader>(true);
-            PixelShader = new ShaderComposition<PixelShader>(false);
-            ComputeShader = new ShaderComposition<ComputeShader>(true);
+            VertexShader = new ShaderComposition<VertexShader>();
+            HullShader = new ShaderComposition<HullShader>();
+            DomainShader = new ShaderComposition<DomainShader>();
+            GeometryShader = new ShaderComposition<GeometryShader>();
+            PixelShader = new ShaderComposition<PixelShader>();
+            ComputeShader = new ShaderComposition<ComputeShader>();
             Compositions = new ShaderComposition[ShaderTypes.Length];
             Compositions[(int)ShaderType.VertexShader] = VertexShader;
             Compositions[(int)ShaderType.HullShader] = HullShader;

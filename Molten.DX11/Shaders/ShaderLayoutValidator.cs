@@ -9,7 +9,7 @@ namespace Molten.Graphics
 {
     internal class ShaderLayoutValidator
     {
-        internal bool Validate(ShaderPassCompileResult pResult)
+        internal bool Validate(ShaderPassCompileResult pResult, Logger log)
         {
             bool valid = true;
             HlslPass pass = pResult.Pass;
@@ -41,24 +41,24 @@ namespace Molten.Graphics
                     Type currentCompositionType = stages[i].GetType().GenericTypeArguments[0];
                     Type previousCompositionType = previous.GetType().GenericTypeArguments[0];
 
-                    pResult.Errors.Add("Incompatible material I/O structure.");
-                    pResult.Errors.Add("====================================");
-                    pResult.Errors.Add($"\tFilename: {pass.Parent.Filename ?? "N/A"}");
-                    pResult.Errors.Add($"\tOutput -- {previousCompositionType.Name}:");
+                    log.WriteError("Incompatible material I/O structure.");
+                    log.WriteError("====================================");
+                    log.WriteError($"\tFilename: {pass.Parent.Filename ?? "N/A"}");
+                    log.WriteError($"\tOutput -- {previousCompositionType.Name}:");
 
                     if (output.Elements.Length > 0)
                     {
                         for (int o = 0; o < output.Elements.Length; o++)
-                            pResult.Errors.Add($"\t\t[{o}] {output.Elements[o].SemanticName} -- index: {output.Elements[o].SemanticIndex}");
+                            log.WriteError($"\t\t[{o}] {output.Elements[o].SemanticName} -- index: {output.Elements[o].SemanticIndex}");
                     }
                     else
                     {
-                        pResult.Errors.Add("No output elements expected.");
+                        log.WriteError("No output elements expected.");
                     }
 
-                    pResult.Errors.Add($"\tInput: {currentCompositionType.Name}:");
+                    log.WriteError($"\tInput: {currentCompositionType.Name}:");
                     for (int o = 0; o < input.Elements.Length; o++)
-                        pResult.Errors.Add($"\t\t[{o}] {input.Elements[o].SemanticName} -- index: {input.Elements[o].SemanticIndex}");
+                        log.WriteError($"\t\t[{o}] {input.Elements[o].SemanticName} -- index: {input.Elements[o].SemanticIndex}");
 
                     valid = false;
                 }
@@ -67,11 +67,11 @@ namespace Molten.Graphics
             }
 
             return valid && 
-                CheckTessellationShaders(pResult) && 
+                CheckTessellationShaders(pResult, log) && 
                 CheckGeometryTessellationAdjacency(pResult);
         }
 
-        private bool CheckTessellationShaders(ShaderPassCompileResult pResult)
+        private bool CheckTessellationShaders(ShaderPassCompileResult pResult, Logger log)
         {
             bool valid = true;
             ShaderReflection hullRef = pResult.Reflections[(int)ShaderType.HullShader];
@@ -79,11 +79,11 @@ namespace Molten.Graphics
 
             if(hullRef != null && domainRef == null)
             {
-                pResult.Errors.Add($"Material pass '{pResult.Pass.Name}' Has a hull shader but no domain shader. Both or neither must be present.");
+                log.WriteError($"Material pass '{pResult.Pass.Name}' Has a hull shader but no domain shader. Both or neither must be present.");
                 valid = false;
             }else if(hullRef == null && domainRef != null)
             {
-                pResult.Errors.Add($"Material pass '{pResult.Pass.Name}' Has a domain shader but no hull shader. Both or neither must be present.");
+                log.WriteError($"Material pass '{pResult.Pass.Name}' Has a domain shader but no hull shader. Both or neither must be present.");
                 valid = false;
             }
 
