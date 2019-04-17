@@ -14,6 +14,9 @@ namespace Molten.Graphics
         static Dictionary<SamplerPreset, ShaderSamplerDefinition> _presets;
         public static ReadOnlyDictionary<SamplerPreset, ShaderSamplerDefinition> Presets { get; }
 
+        bool _isComparison;
+        SamplerFilter _filter;
+
         static ShaderSamplerDefinition()
         {
             _presets = new Dictionary<SamplerPreset, ShaderSamplerDefinition>()
@@ -51,7 +54,15 @@ namespace Molten.Graphics
 
         /// <summary>Gets or sets the filtering method to use when sampling a texture (see SharpDX.Direct3D11.Filter).</summary>
         [DataMember]
-        public SamplerFilter Filter { get; set; }
+        public SamplerFilter Filter
+        {
+            get => _filter;
+            set
+            {
+                _filter = value;
+                _isComparison = (_filter >= SamplerFilter.ComparisonMinMagMipPoint && _filter <= SamplerFilter.ComparisonAnisotropic);
+            }
+        }
 
         /// <summary>Clamping value used if SharpDX.Direct3D11.Filter.Anisotropic or SharpDX.Direct3D11.Filter.ComparisonAnisotropic 
         /// is specified in SamplerFilter. Valid values are between 1 and 16.</summary>
@@ -77,7 +88,6 @@ namespace Molten.Graphics
         public float LodBias { get; set; }
 
         /// <summary>Gets whether or not the sampler a comparison sampler. This is determined by the <see cref="Filter"/> mode.</summary>
-        [DataMember]
         public bool IsComparisonSampler { get; }
     }
 }

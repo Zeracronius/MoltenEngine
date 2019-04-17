@@ -19,6 +19,10 @@ namespace Molten.Graphics
         public string Description { get; set; }
 
         [DataMember]
+        public string Author { get; set; }
+
+
+        [DataMember]
         public List<ShaderPassDefinition> Passes { get; set; } = new List<ShaderPassDefinition>();
 
         [DataMember]
