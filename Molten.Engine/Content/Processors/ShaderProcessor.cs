@@ -1,5 +1,6 @@
 ﻿using Molten.Graphics;
 using Molten.Graphics.Textures.DDS;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,20 +21,11 @@ namespace Molten.Content
                 using (StreamReader reader = new StreamReader(stream, Encoding.UTF8, true, 2048, true))
                 {
                     string source = reader.ReadToEnd();
-
-                    ShaderCompileResult r = context.Engine.Renderer.BuildShader(source, context.Filename);
-                    foreach (string group in r.ShaderGroups.Keys)
+                    List<ShaderDefinition> definitions = JsonConvert.DeserializeObject<List<ShaderDefinition>>(source);
+                    foreach (ShaderDefinition def in definitions)
                     {
-                        List<IShader> list = r.ShaderGroups[group];
-                        foreach (IShader shader in list)
-                        {
-                            if (shader is IMaterial mat)
-                                context.AddOutput(mat);
-                            else if (shader is IComputeTask ct)
-                                context.AddOutput(ct);
-
-                            context.AddOutput(shader);
-                        }
+                        IShader shader = context.Engine.Renderer.ShaderCompiler.BuildShader(def, context.Log);
+                        context.AddOutput(shader);
                     }
                 }
             }
@@ -51,7 +43,7 @@ namespace Molten.Content
             {
                 foreach (object obj in groupContent)
                 {
-                    IMaterial mat = obj as IMaterial;
+                    IShader mat = obj as IShader;
                     if (mat.Name == materialName)
                         return mat;
                 }

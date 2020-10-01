@@ -98,6 +98,6 @@ namespace Molten.Graphics
         /// <summary>
         /// Gets or sets the depth write permission. the default value is <see cref="GraphicsDepthWritePermission.Enabled"/>.
         /// </summary>
-        internal GraphicsDepthWritePermission WritePermission { get; set; };
+        internal GraphicsDepthWritePermission WritePermission { get; set; }
     }
 }

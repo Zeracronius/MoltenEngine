@@ -24,20 +24,8 @@ namespace Molten.Graphics
         internal static readonly string[] NewLineSeparators = new string[] { "\n", Environment.NewLine };
         RendererDX11 _renderer;
 
-        Dictionary<string, ShaderNodeParser> _parsers;
-
         internal HlslCompiler(RendererDX11 renderer) : base(renderer, SharpShader.OutputLanguage.HLSL)
         {
-            // Detect and instantiate node parsers
-            _parsers = new Dictionary<string, ShaderNodeParser>();
-            IEnumerable<Type> parserTypes = ReflectionHelper.FindTypeInParentAssembly<ShaderNodeParser>();
-            foreach (Type t in parserTypes)
-            {
-                ShaderNodeParser parser = Activator.CreateInstance(t, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, null, null) as ShaderNodeParser;
-                foreach (string nodeName in parser.SupportedNodes)
-                    _parsers.Add(nodeName, parser);
-            }
-
             _renderer = renderer;
         }
 
@@ -214,7 +202,7 @@ namespace Molten.Graphics
                 }
 
                 shader.InputStructure = shader.Passes[0].VertexShader.InputStructure;
-                shader.InputStructureByteCode = firstPassResult.VertexResult.Bytecode;
+                shader.InputStructureByteCode = context.Bytecodes[shader.Passes[0].VertexShader.EntryPoint].Bytecode;
 
                 shader.Scene = new SceneMaterialProperties(shader);
                 shader.Object = new ObjectMaterialProperties(shader);
@@ -239,83 +227,6 @@ namespace Molten.Graphics
             }
 
             return headers;
-        }
-
-        internal void ParseHeader(HlslFoundation foundation, ref string header, ShaderCompilerContext context)
-        {
-            XmlDocument doc = new XmlDocument();
-            doc.LoadXml(header);
-
-            XmlNode rootNode = doc.ChildNodes[0];
-            ParseNode(foundation, rootNode, context);
-        }
-
-        internal void ParseNode(HlslFoundation foundation, XmlNode parentNode, ShaderCompilerContext context)
-        {
-            foreach (XmlNode node in parentNode.ChildNodes)
-            {
-                string nodeName = node.Name.ToLower();
-                ShaderNodeParser parser = null;
-                if (_parsers.TryGetValue(nodeName, out parser))
-                {
-                    parser.Parse(foundation, context, node);
-                }
-                else
-                {
-                    if (parentNode.ParentNode != null)
-                        context.AddMessage($"Ignoring unsupported {parentNode.ParentNode.Name} tag '{parentNode.Name}'");
-                    else
-                        context.AddMessage($"Ignoring unsupported root tag '{parentNode.Name}'");
-                }
-            }
-        }
-
-        protected bool HasResource(HlslShader shader, string resourceName)
-        {
-            foreach (ShaderResourceVariable resource in shader.Resources)
-            {
-                if (resource == null)
-                    continue;
-
-                if (resource.Name == resourceName)
-                    return true;
-            }
-
-            return false;
-        }
-
-        protected bool HasConstantBuffer(ShaderCompilerContext context, HlslShader shader, string bufferName, string[] varNames)
-        {
-            foreach (ShaderConstantBuffer buffer in shader.ConstBuffers)
-            {
-                if (buffer == null)
-                    continue;
-
-                if (buffer.BufferName == bufferName)
-                {
-                    if (buffer.Variables.Length != varNames.Length)
-                    {
-                        context.AddError($"Material '{bufferName}' constant buffer does not have the correct number of variables ({varNames.Length})");
-                        return false;
-                    }
-
-                    for (int i = 0; i < buffer.Variables.Length; i++)
-                    {
-                        ShaderConstantVariable variable = buffer.Variables[i];
-                        string expectedName = varNames[i];
-
-                        if (variable.Name != expectedName)
-                        {
-                            context.AddError($"Material '{bufferName}' constant variable #{i + 1} is incorrect: Named '{variable.Name}' instead of '{expectedName}'");
-                            return false;
-                        }
-                    }
-
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         protected ShaderReflection BuildIO(CompilationResult code, ShaderComposition composition)
@@ -571,11 +482,11 @@ namespace Molten.Graphics
         /// <param name="filename"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        protected bool Compile(string entryPoint, ShaderType type, ShaderCompilerContext context, out CompilationResult result)
+        protected bool BuildByteCode(string entryPoint, ShaderType type, ShaderCompilerContext context, out CompilationResult result)
         {
             // Since it's not possible to have two functions in the same file with the same name, we'll just check if
             // a shader with the same entry-point name is already loaded in the context.
-            if (!context.HlslShaders.TryGetValue(entryPoint, out result))
+            if (!context.Bytecodes.TryGetValue(entryPoint, out result))
             {
                 string strProfile = ShaderModel.Model5_0.ToProfile(type);
                 result = ShaderBytecode.Compile(context.Source, entryPoint, strProfile, _compileFlags, EffectFlags.None, context.Filename);
@@ -587,7 +498,7 @@ namespace Molten.Graphics
                         return false;
                 }
 
-                context.HlslShaders.Add(entryPoint, result);
+                context.Bytecodes.Add(entryPoint, result);
             }
 
             return !result.HasErrors;
@@ -622,7 +533,7 @@ namespace Molten.Graphics
                 if (string.IsNullOrWhiteSpace(pass.Compositions[i].EntryPoint))
                     continue;
 
-                if (Compile(pass.Compositions[i].EntryPoint, HlslPass.ShaderTypes[i], context, out result.Results[i]))
+                if (BuildByteCode(pass.Compositions[i].EntryPoint, HlslPass.ShaderTypes[i], context, out result.Results[i]))
                 {
                     result.Reflections[i] = BuildIO(result.Results[i], pass.Compositions[i]);
                 }

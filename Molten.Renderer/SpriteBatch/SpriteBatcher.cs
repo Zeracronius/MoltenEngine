@@ -577,7 +577,7 @@ namespace Molten.Graphics
                 sprite.Color,
                 sprite.Rotation,
                 sprite.Origin,
-                sprite.Material,
+                sprite.Shader,
                 sprite.ArraySlice);
         }
 

@@ -22,7 +22,7 @@ namespace Molten.Graphics
 
         public Vector2F Origin { get; set; }
 
-        public IMaterial Material { get; set; }
+        public IShader Shader { get; set; }
 
         public Color Color { get; set; } = Color.White;
     }
