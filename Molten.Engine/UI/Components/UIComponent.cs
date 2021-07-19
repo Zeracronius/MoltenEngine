@@ -296,19 +296,18 @@ namespace Molten.UI
         {
             base.OnUpdate(time);
             OnUpdateUi(time);
+
+            Locker.Lock(() =>
+            {
+                for (int i = 0; i < _children.Count; i++)
+                    _children[i].OnUpdate(time);
+            });
         }
 
         /// <summary>Invoked when the current UI component is to be updated.</summary>
         /// <param name="time">A timing instance.</param>
         public virtual void OnUpdateUi(Timing time)
         {
-            Locker.Lock(() =>
-            {
-                for (int i = 0; i < _children.Count; i++)
-                    _children[i].OnUpdateUi(time);
-            });
-
-            OnUpdateUi(time);
         }
 
         /// <summary>

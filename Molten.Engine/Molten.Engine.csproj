@@ -148,6 +148,7 @@
     <Compile Include="Threading\WorkerGroup.cs" />
     <Compile Include="Threading\WorkerThread.cs" />
     <Compile Include="UISettings.cs" />
+    <Compile Include="UI\Components\UITextbox.cs" />
     <Compile Include="UI\UICompoundComponent.cs" />
     <Compile Include="Scene\SceneEventData.cs" />
     <Compile Include="UI\Components\UIMenu.cs" />

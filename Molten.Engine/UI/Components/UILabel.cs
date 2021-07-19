@@ -25,14 +25,19 @@ namespace Molten.UI
         Vector2I _textSize;
         Color _color;
 
+        public UILabel()
+        {
+            _font = Engine.Current.DefaultFont;
+            _color = Color.White;
+            _hAlign = UIHorizontalAlignment.Left;
+            _vAlign = UIVerticalAlignment.Top;
+        }
+
         public UILabel(SpriteFont font, string text = "")
         {
-            _color = Color.White;
             _text = text;
             _font = font;
             _textSize = (Vector2I)_font.MeasureString(_text);
-            _hAlign = UIHorizontalAlignment.Left;
-            _vAlign = UIVerticalAlignment.Top;
             AlignText();
         }
 

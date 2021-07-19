@@ -79,7 +79,8 @@ namespace Molten
 
         public override void OnUpdate(Timing time)
         {
-            _data.TargetTransform = Object.Transform.Global;
+            if (Object != null)
+                _data.TargetTransform = Object.Transform.Global;
         }
 
         protected abstract void OnRender(SpriteBatcher sb);
