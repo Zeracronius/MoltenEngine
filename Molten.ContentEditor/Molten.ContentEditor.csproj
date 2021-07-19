@@ -61,6 +61,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -75,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Fonts\ARIAL.TTF" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Molten.DX11\Molten.DX11.csproj">
@@ -101,6 +103,10 @@
       <Project>{051563bb-29ac-4903-ae21-72184cd18955}</Project>
       <Name>Molten.OpenGL</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Molten.Platform.Windows\Molten.Platform.Windows.csproj">
+      <Project>{bda0168b-68ff-4201-8812-9c4ffe1f6a86}</Project>
+      <Name>Molten.Platform.Windows</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Molten.Platform\Molten.Platform.csproj">
       <Project>{57d4a251-9082-4199-b894-6173c7f9215b}</Project>
       <Name>Molten.Platform</Name>
@@ -110,5 +116,6 @@
       <Name>Molten.Utility</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

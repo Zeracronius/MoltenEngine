@@ -16,10 +16,11 @@ namespace Molten.ContentEditor
             EngineSettings settings = new EngineSettings();
             settings.Graphics.EnableDebugLayer.Value = false;
             settings.Graphics.VSync.Value = true;
+            settings.Graphics.Library.Value = Graphics.GraphicsSettings.RENDERER_DX11;
             settings.UseGuiControl = false;
 
             _core = new EditorCore();
-            _core.Start();
+            _core.Start(settings, true);
         }
     }
 }

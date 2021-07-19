@@ -126,7 +126,7 @@ namespace Molten.Input
         Equals = unchecked((int)13),
 
         /// <summary>	
-        /// No documentation.	
+        /// Backspace.	
         /// </summary>	
         /// 	
         /// <msdn-id>ee418641</msdn-id>	
