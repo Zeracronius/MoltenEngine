@@ -35,14 +35,14 @@ namespace Molten.UI
         {
             _font = Engine.Current.DefaultFont;
             _hAlign = UIHorizontalAlignment.Left;
-            _vAlign = UIVerticalAlignment.Top;
+            _vAlign = UIVerticalAlignment.Bottom;
             _repeatDelay = 33;
             _color = Color.White;
 
-            OnFocus += UITextbox_OnFocus;
-            OnUnfocus += UITextbox_OnUnfocus;
-            //OnEnter += UITextbox_OnEnter;
-            //OnLeave += UITextbox_OnLeave;
+            //OnFocus += UITextbox_OnFocus;
+            //OnUnfocus += UITextbox_OnUnfocus;
+            OnEnter += UITextbox_OnEnter;
+            OnLeave += UITextbox_OnLeave;
         }
 
 
@@ -56,15 +56,15 @@ namespace Molten.UI
         }
 
 
-        //private void UITextbox_OnEnter(SceneEventData<Input.MouseButton> data)
-        //{
-        //    //TODO Set cursor to caret icon.
-        //}
+        private void UITextbox_OnEnter(SceneEventData<Input.MouseButton> data)
+        {
+            //TODO Set cursor to caret icon.
+        }
 
-        //private void UITextbox_OnLeave(SceneEventData<Input.MouseButton> data)
-        //{
-        //    //TODO Set cursor back to default.
-        //}
+        private void UITextbox_OnLeave(SceneEventData<Input.MouseButton> data)
+        {
+            //TODO Set cursor back to default.
+        }
 
         protected override void OnInitialize(SceneObject obj)
         {
@@ -193,13 +193,14 @@ namespace Molten.UI
         private void keyboard_OnKeyReleased(Input.IKeyboardDevice device, Input.Key key)
         {
             // Only reset if the released key is the last one to be pressed.
-            if (_currentKey == key)
+            if (_isFocused && _currentKey == key)
                 _currentKey = null;
         }
 
         private void keyboard_OnKeyPressed(Input.IKeyboardDevice device, Input.Key key)
         {
-            _currentKey = key;
+            if (_isFocused)
+                _currentKey = key;
         }
 
         private void CalculateCaretDeltaPosition()

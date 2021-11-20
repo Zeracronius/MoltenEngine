@@ -112,7 +112,7 @@ namespace Molten.ContentEditor
             _textBox.IsEnabled = true;
             _textBox.DepthWriteOverride = GraphicsDepthWritePermission.Disabled;
 
-            _textBox.Object.Transform.LocalPosition = new Vector3F(10, 0, 10);
+            _textBox.Object.Transform.LocalPosition = new Vector3F(20, -20, 0);
 
             UI.AddChild(new UILabel(Engine.Current.DefaultFont, "Label"));
 
@@ -156,13 +156,13 @@ namespace Molten.ContentEditor
 
         protected override void OnUpdate(Timing time)
         {
-            Vector3F position = _textBox.Object.Transform.LocalPosition;
+            //Vector3F position = _textBox.Object.Transform.LocalPosition;
 
-            position.X++;
-            if (position.X > 100)
-                position.X = 0;
+            //position.X++;
+            //if (position.X > 100)
+            //    position.X = 0;
 
-            _textBox.Object.Transform.LocalPosition = position;
+            //_textBox.Object.Transform.LocalPosition = position;
         }
 
 
