@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Molten</RootNamespace>
     <AssemblyName>Molten.Engine</AssemblyName>
-    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -22,6 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>latest</LangVersion>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -139,7 +140,6 @@
     <Compile Include="Tasks\EngineAddScene.cs" />
     <Compile Include="Tasks\EngineRemoveScene.cs" />
     <Compile Include="Tasks\EngineTask.cs" />
-    <Compile Include="Tests\ContentManagerTests.cs" />
     <Compile Include="Threading\EngineThread.cs" />
     <Compile Include="Threading\WorkerGroupException.cs" />
     <Compile Include="Threading\EngineThreadException.cs" />

@@ -1,21 +1,18 @@
 ﻿using Molten.Graphics;
 using Molten.Input;
 using Molten.Threading;
+using Molten.Utility;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Molten
 {
-    public delegate void FoundationHandler(Foundation foundation);
-
     /// <summary>
     /// Provides a foundation on which to build a game or other type of application with Molten engine.
     /// </summary>
-    public abstract class Foundation
+    public abstract class Foundation<R, I> : IDisposable
+        where R : MoltenRenderer, new()
+        where I : class, IInputManager, new()
     {
         Engine _engine;
         EngineThread _gameThread;
@@ -25,9 +22,9 @@ namespace Molten
         IMouseDevice _mouse;
 
         /// <summary>
-        /// Occurs when the game is in the process of exiting.
+        /// Occurs when the game is in the process of closing.
         /// </summary>
-        public event FoundationHandler OnGameExiting;
+        public event MoltenEventHandler<Foundation<R, I>> OnClosing;
 
         /// <summary>Creates a new instance of <see cref="Foundation"/>.</summary>
         /// <param name="title"></param>
@@ -37,21 +34,33 @@ namespace Molten
             Title = title;
         }
 
+        public void Dispose()
+        {
+            if (!IsDisposed)
+            {
+                IsDisposed = true;
+                ForceExit();
+                _engine.Dispose();
+                _gameThread.Dispose();
+                _gameWindow.Dispose();
+            }
+        }
+
         /// <summary>Starts the game. This will trigger initialization, then start the renderer and game threads.</summary>
         /// <param name="settings">The settings for the game. If this is null, the default settings will be used.</param>
         /// <param name="ignoreSavedSettings">If true, the previously-saved settings will be ignored and replaced with the provided (or default) settings.</param>
         /// <param name="gameThreadApartment">The thread apartment state for the main game thread.</param>
         /// <param name="renderThreadApartment">The thread apartment state for the renderer thread</param>
-        public void Start(EngineSettings settings = null, 
-            bool ignoreSavedSettings = false, 
+        public void Start(EngineSettings settings = null,
+            bool ignoreSavedSettings = false,
             ApartmentState gameThreadApartment = ApartmentState.MTA, ApartmentState renderThreadApartment = ApartmentState.MTA)
         {
             if (_gameThread != null)
                 return;
 
             _engine = new Engine(settings, ignoreSavedSettings);
-            _engine.LoadRenderer();
-            _engine.LoadInput();
+            _engine.LoadRenderer<R>();
+            _engine.LoadInput<I>();
 
             if (_engine.Input == null)
             {
@@ -90,8 +99,8 @@ namespace Molten
                 else
                 {
                     _engine.Log.WriteLine("Game exiting");
-                    OnGameExiting?.Invoke(this);
-                    OnExiting();
+                    OnClosing?.Invoke(this);
+                    OnClose();
                     ForceExit();
                 }
             }, gameThreadApartment);
@@ -179,13 +188,17 @@ namespace Molten
             RunState = GameRunState.Running;
         }
 
-        /// <summary>Signals the game/engine to start the exit procedure. This will allow the game and engine to shutdown cleanly (i.e whenever they are ready to exit).</summary>
+        /// <summary>Signals the game/engine to start the exit procedure. 
+        /// This will allow the game and engine to shutdown cleanly (i.e whenever they are ready to exit).
+        /// Does not call <see cref="Dispose"/></summary>
         public void Exit()
         {
-            RunState = GameRunState.Exiting;           
+            RunState = GameRunState.Exiting;
         }
 
-        /// <summary>Forces the game to exit. This will not give the game a chance to save (to avoid unintended side-effects from forcefully shutting the game/engine down).</summary>
+        /// <summary>Forces the game to exit. This will not give the game a chance to 
+        /// save (to avoid unintended side-effects from forcefully shutting the game/engine down).
+        /// Does not call <see cref="Dispose"/></summary>
         public void ForceExit()
         {
             _engine.Log.WriteLine("Game closed");
@@ -198,7 +211,7 @@ namespace Molten
         protected virtual void OnFirstLoad(Engine engine) { }
 
         /// <summary>Occurs when the game is in the process of exiting. This gives the game logic a chance to correctly handle the exit, such as saving the player's progress.</summary>
-        protected virtual void OnExiting() { }
+        protected virtual void OnClose() { }
 
         /// <summary>Occurs when the game is paused (and not already paused).</summary>
         protected virtual void OnPause() { }
@@ -245,5 +258,7 @@ namespace Molten
 
         /// <summary>Gets the <see cref="INativeSurface"/> that the game renders in to.</summary>
         public INativeSurface Window => _gameWindow;
+
+        public bool IsDisposed { get; private set; }
     }
 }

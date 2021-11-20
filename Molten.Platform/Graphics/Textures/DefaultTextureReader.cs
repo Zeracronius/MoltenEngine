@@ -1,10 +1,5 @@
 ﻿using ImageMagick;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Molten.Graphics.Textures
 {
@@ -33,7 +28,7 @@ namespace Molten.Graphics.Textures
                 image.Warning += Image_Warning;
                 data.Width = image.Width;
                 data.Height = image.Height;
-                IPixelCollection pixels = image.GetPixels();
+                IPixelCollection<byte> pixels = image.GetPixels();
                 TextureData.Slice slice = new TextureData.Slice()
                 {
                     Data = pixels.ToByteArray(PixelMapping.RGBA),

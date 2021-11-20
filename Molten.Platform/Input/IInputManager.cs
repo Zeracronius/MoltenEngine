@@ -1,9 +1,4 @@
 ﻿using Molten.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Molten.Input
 {
@@ -21,18 +16,22 @@ namespace Molten.Input
         T GetCustomDevice<T>() where T : class, IInputDevice, new();
 
         /// <summary>
-        /// Gets the default mouse handler for the current input library.
+        /// Gets the default mouse handler for the current <see cref="IInputManager"/>.
         /// </summary>
-        /// <param name="surface">The window surface the handler will be bound to.</param>
         /// <returns></returns>
         IMouseDevice GetMouse();
 
         /// <summary>
-        /// Gets the default keyboard handler for the current input library.
+        /// Gets the default keyboard device handler for the current <see cref="IInputManager"/>.
         /// </summary>
-        /// <param name="surface">The window surface the handler will be bound to.</param>
         /// <returns></returns>
         IKeyboardDevice GetKeyboard();
+
+        /// <summary>
+        /// Gets the default touch device handler for the current <see cref="IInputManager"/>.
+        /// </summary>
+        /// <returns></returns>
+        ITouchDevice GetTouch();
 
         /// <summary>
         /// Gets the default gamepad handler for the current input library.
@@ -53,5 +52,12 @@ namespace Molten.Input
         /// Gets or sets the camera through which input is handled. If the camera does not have a valid <see cref="INativeSurface"/>, input handling will be skipped.
         /// </summary>
         IInputCamera Camera { get; set; }
+
+        IInputNavigation Navigation { get; }
+
+        /// <summary>
+        /// Gets the <see cref="InputSettings"/> instance bound to the current <see cref="IInputManager"/>.
+        /// </summary>
+        InputSettings Settings { get; }
     }
 }

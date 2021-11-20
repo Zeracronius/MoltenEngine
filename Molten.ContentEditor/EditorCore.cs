@@ -1,6 +1,7 @@
 ﻿using Molten;
 using Molten.Font;
 using Molten.Graphics;
+using Molten.Input;
 using Molten.UI;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Molten.ContentEditor
 {
-    public class EditorCore : Foundation
+    public class EditorCore : Foundation<RendererDX11, WinInputManager>
     {
         Scene _uiScene;
         UIMenu _menu;

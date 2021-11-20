@@ -8,9 +8,10 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>Molten.ContentEditor</RootNamespace>
     <AssemblyName>Content Editor</AssemblyName>
-    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -79,9 +80,9 @@
     <None Include="Fonts\ARIAL.TTF" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Molten.DX11\Molten.DX11.csproj">
+    <ProjectReference Include="..\Molten.DX11\Molten.Renderer.DX11.csproj">
       <Project>{8800afbc-8be4-4145-803e-ef8c1026a17b}</Project>
-      <Name>Molten.DX11</Name>
+      <Name>Molten.Renderer.DX11</Name>
     </ProjectReference>
     <ProjectReference Include="..\Molten.Engine\Molten.Engine.csproj">
       <Project>{8e14325b-28cc-44a8-83ed-4b5946240d88}</Project>
@@ -99,9 +100,13 @@
       <Project>{e59938af-a9d4-4963-b4ac-61e53d05527e}</Project>
       <Name>Molten.Math</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Molten.OpenGL\Molten.OpenGL.csproj">
+    <ProjectReference Include="..\Molten.OpenGL\Molten.Renderer.OpenGL.csproj">
       <Project>{051563bb-29ac-4903-ae21-72184cd18955}</Project>
-      <Name>Molten.OpenGL</Name>
+      <Name>Molten.Renderer.OpenGL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Molten.Platform.Windows\Molten.Platform.Windows.csproj">
+      <Project>{bda0168b-68ff-4201-8812-9c4ffe1f6a86}</Project>
+      <Name>Molten.Platform.Windows</Name>
     </ProjectReference>
     <ProjectReference Include="..\Molten.Platform.Windows\Molten.Platform.Windows.csproj">
       <Project>{bda0168b-68ff-4201-8812-9c4ffe1f6a86}</Project>

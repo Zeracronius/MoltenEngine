@@ -1,23 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.Serialization;
 
 namespace Molten.Input
 {
+    [DataContract]
     public class InputSettings : SettingBank
     {
-        public const string DEFAULT_LIBRARY = "Molten.Platform.Windows.dll; Molten.Input.InputManager";
-
         public InputSettings()
         {
-            Library = AddSetting<string>("input", DEFAULT_LIBRARY);
+            TouchBufferSize = AddSetting<int>("touch_buffer_size", 128);
+            MouseBufferSize = AddSetting<int>("touch_buffer_size", 256);
+            KeyboardBufferSize = AddSetting<int>("touch_buffer_size", 256);
         }
 
-        /// <summary>Gets the input library to use with the engine. This can be changed to any library containing one or more implementations of <see cref="IInputManager"/>.</summary>
+        /// <summary>Gets or sets the touch device sample buffer size.</summary>
         [DataMember]
-        public SettingValue<string> Library { get; private set; }
+        public SettingValue<int> TouchBufferSize { get; }
+
+        /// <summary>Gets or sets the touch device sample buffer size.</summary>
+        [DataMember]
+        public SettingValue<int> MouseBufferSize { get; }
+
+        /// <summary>Gets or sets the touch device sample buffer size.</summary>
+        [DataMember]
+        public SettingValue<int> KeyboardBufferSize { get; }
     }
 }

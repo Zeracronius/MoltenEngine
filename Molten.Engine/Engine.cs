@@ -4,12 +4,7 @@ using Molten.Graphics;
 using Molten.Input;
 using Molten.Threading;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Molten
 {
@@ -26,7 +21,7 @@ namespace Molten
         /// down to the graphics and rendering chain.
         /// </summary>
         event DisplayManagerEvent OnAdapterInitialized;
-        
+
         /// <summary>
         /// Creates a new instance of <see cref="Engine"/>.
         /// </summary>
@@ -41,9 +36,9 @@ namespace Molten
                 throw new NotSupportedException("Molten engine only supports 64-bit. Please build accordingly.");
 
             Current = this;
-            Settings = initialSettings ??  new EngineSettings();
+            Settings = initialSettings ?? new EngineSettings();
 
-            if(!ignoreSavedSettings)
+            if (!ignoreSavedSettings)
                 Settings.Load();
 
             Log = Logger.Get();
@@ -63,14 +58,13 @@ namespace Molten
             Logger.DisposeAll();
         }
 
-        internal void LoadInput()
+        internal void LoadInput<I>()
+            where I : class, IInputManager, new()
         {
-            Assembly inputAssembly;
-            Input = LibraryDetection.LoadInstance<IInputManager>(Log, "input", "input manager", 
-                Settings.Input.Library, 
-                Settings.Input, 
-                InputSettings.DEFAULT_LIBRARY, 
-                out inputAssembly);
+            if (Input != null)
+                Log.WriteLine("Attempted to load input manager when one is already loaded!");
+
+            Input = new I();
 
             // Initialize
             try
@@ -86,7 +80,8 @@ namespace Molten
             }
         }
 
-        internal bool LoadRenderer()
+        internal bool LoadRenderer<R>()
+            where R : MoltenRenderer, new()
         {
             if (Renderer != null)
             {
@@ -94,13 +89,7 @@ namespace Molten
                 return false;
             }
 
-            // TODO default to OpenGL if on a non-windows platform.
-            Assembly renderAssembly;
-            Renderer = LibraryDetection.LoadInstance<MoltenRenderer>(Log, "render", "renderer", 
-                Settings.Graphics.Library, 
-                Settings.Graphics, 
-                GraphicsSettings.DEFAULT_RENDER, 
-                out renderAssembly);
+            Renderer = new R();
 
             try
             {
