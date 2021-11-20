@@ -113,7 +113,7 @@ namespace Molten.ContentEditor
             _textBox.IsEnabled = true;
             _textBox.DepthWriteOverride = GraphicsDepthWritePermission.Disabled;
 
-            _textBox.Object.Transform.LocalPosition = new Vector3F(20, -20, 0);
+            _textBox.Object.Transform.LocalPosition = new Vector3F(0, -10, 0);
 
             UI.AddChild(new UILabel(Engine.Current.DefaultFont, "Label"));
 
