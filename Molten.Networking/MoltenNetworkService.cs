@@ -37,6 +37,12 @@ namespace Molten.Networking
             Log.Dispose();
         }
 
+        public void Stop()
+        {
+            _outbox.Clear();
+            OnStop();
+        }
+
         /// <summary>
         /// Puts the message into outbox to be sent on next update.
         /// </summary>
@@ -73,8 +79,10 @@ namespace Molten.Networking
         #region Protected
 
         protected internal abstract void OnUpdate(Timing timing);
+        protected internal abstract void OnStop();
         protected internal abstract void OnDispose();
         protected internal Logger Log { get; }
+
 
         #endregion
 

@@ -68,9 +68,9 @@ namespace Molten.Networking
 
         protected override void OnDispose()
         {
-            foreach (NetConnection connection in _peer.Connections)
-                connection.Disconnect("Client shudown.");
+            OnStop();
         }
+
 
 
         private void SendMessages()
@@ -113,10 +113,15 @@ namespace Molten.Networking
                         break;
 
                     case NetIncomingMessageType.Data:
-                        Log.WriteDebugLine("Recieved message: " + msg.ReadString());
                         byte[] destination = new byte[msg.LengthBytes];
                         Array.Copy(msg.Data, destination, msg.LengthBytes);
                         _inbox.Enqueue(new NetworkMessage(destination, msg.DeliveryMethod.ToMolten(), msg.SequenceChannel));
+                        break;
+
+                    case NetIncomingMessageType.StatusChanged:
+                        NetConnectionStatus status = (NetConnectionStatus)msg.ReadByte();
+                        _inbox.Enqueue(new LidgrenConnectionStatusChanged(msg));
+                        Log.WriteDebugLine("Recieved status change: " + Enum.GetName(typeof(NetConnectionStatus), status) + " - " + msg.ReadString());
                         break;
 
                     default:
@@ -125,6 +130,14 @@ namespace Molten.Networking
                 }
                 _peer.Recycle(msg);
             }
+        }
+
+        protected override void OnStop()
+        {
+            foreach (NetConnection connection in _peer.Connections)
+                connection.Disconnect("Client shutdown.");
+
+            _peer.Shutdown("Client shutdown.");
         }
     }
 }

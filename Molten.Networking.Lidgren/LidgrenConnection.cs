@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using Molten.Networking.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,6 @@ namespace Molten.Networking
     {
         NetConnection _connection;
 
-
         public LidgrenConnection(NetConnection lidgrenConnection)
         {
             _connection = lidgrenConnection;
@@ -21,5 +21,6 @@ namespace Molten.Networking
 
         public string Host => _connection.RemoteEndPoint.Address.ToString();
         public int Port => _connection.RemoteEndPoint.Port;
+        public ConnectionStatus Status => _connection.Status.ToMolten();
     }
 }

@@ -227,6 +227,7 @@ namespace Molten
                 return;
             }
 
+            NetworkService.Stop();
             NetworkThread.Dispose();
             NetworkThread = null;
         }

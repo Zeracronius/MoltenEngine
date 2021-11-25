@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Molten.Networking.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ namespace Molten.Networking
 {
     public interface INetworkConnection
     {
+        ConnectionStatus Status { get; }
         string Host { get; }
         int Port { get; }
     }

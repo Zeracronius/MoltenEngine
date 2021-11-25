@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Molten.Samples
 {
-    public class SpriteFontStress : SampleSceneGame
+    public class NetworkingTest : SampleSceneGame
     {
         private const string NET_IDENTITY = "Molten Network Test";
         private const int NET_PORT = 2134;
@@ -20,7 +20,7 @@ namespace Molten.Samples
 
         Networking.LidgrenNetworkService _client;
 
-        public SpriteFontStress() 
+        public NetworkingTest() 
             : base("Networking Test")
         {
             
@@ -28,10 +28,13 @@ namespace Molten.Samples
 
         protected override void OnInitialize(Engine engine)
         {
-            base.LoadNetworkingService<Networking.LidgrenNetworkService>();
-            engine.StartNetworkService();
+            if (engine.NetworkService == null)
+            {
+                base.LoadNetworkingService<Networking.LidgrenNetworkService>();
+                engine.StartNetworkService();
 
-            engine.NetworkService.Start(Networking.Enums.ServiceType.Server, NET_PORT, NET_IDENTITY);
+                engine.NetworkService.Start(Networking.Enums.ServiceType.Server, NET_PORT, NET_IDENTITY);
+            }
             
 
             _client = new Networking.LidgrenNetworkService();
@@ -63,6 +66,11 @@ namespace Molten.Samples
                         Log.WriteDebugLine("[Server]: Recieved message: " + messageContent);
                         break;
 
+                    case Networking.Message.ConnectionStatusChanged message:
+                        string content = Encoding.ASCII.GetString(message.Data);
+                        Log.WriteDebugLine($"[Server][{message.Connection.Host}]: Connection status changed: " + content);
+                        break;
+
                     default:
                         break;
                 }
@@ -70,6 +78,9 @@ namespace Molten.Samples
 
             UpdateClient(time);
             base.OnUpdate(time);
+
+            if (base.RunState == GameRunState.Exiting)
+                _client.Dispose();
         }
 
         private void UpdateClient(Timing time)
@@ -92,11 +103,21 @@ namespace Molten.Samples
                         Log.WriteDebugLine("[Client]: Recieved message: " + messageContent);
                         break;
 
+                    case Networking.Message.ConnectionStatusChanged message:
+                        string content = Encoding.ASCII.GetString(message.Data);
+                        Log.WriteDebugLine($"[Client][{message.Connection.Host}]: Connection status changed: " + content);
+                        break;
 
                     default:
                         break;
                 }
             }
+        }
+
+        protected override void OnClose()
+        {
+            Engine.StopNetworkService();
+            _client.Dispose();
         }
     }
 }

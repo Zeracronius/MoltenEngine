@@ -18,6 +18,8 @@ namespace Molten.Networking
             _connection = requestMessage.SenderConnection;
         }
 
+        public override INetworkConnection Connection => new LidgrenConnection(_connection);
+
         public override void Approve()
         {
             _connection.Approve();

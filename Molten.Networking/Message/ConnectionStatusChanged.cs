@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace Molten.Networking.Message
 {
-    public abstract class ConnectionRequest : INetworkMessage
+    public abstract class ConnectionStatusChanged : INetworkMessage
     {
         public byte[] Data { get; }
         public int Sequence { get; }
         public DeliveryMethod DeliveryMethod { get; }
 
-        protected ConnectionRequest(byte[] data, DeliveryMethod deliveryMethod, int sequence)
+        protected ConnectionStatusChanged(byte[] data, DeliveryMethod deliveryMethod, int sequence)
         {
             Data = data;
             Sequence = sequence;
@@ -21,7 +21,5 @@ namespace Molten.Networking.Message
         }
 
         public abstract INetworkConnection Connection { get; }
-        public abstract void Approve();
-        public abstract void Reject(string reason);
     }
 }

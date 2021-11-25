@@ -41,9 +41,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Enums\ConnectionStatus.cs" />
     <Compile Include="Enums\ServiceType.cs" />
     <Compile Include="Message\ConnectionRequest.cs" />
     <Compile Include="Enums\DeliveryMethod.cs" />
+    <Compile Include="Message\ConnectionStatusChanged.cs" />
     <Compile Include="Message\INetworkMessage.cs" />
     <Compile Include="MoltenNetworkService.cs" />
     <Compile Include="Message\NetworkMessage.cs" />
