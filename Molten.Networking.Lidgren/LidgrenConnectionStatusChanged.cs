@@ -1,13 +1,12 @@
 ﻿using Lidgren.Network;
-using Molten.Networking.Enums;
-using Molten.Networking.Message;
+using Molten.Net.Message;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Molten.Networking
+namespace Molten.Net
 {
     internal class LidgrenConnectionStatusChanged : ConnectionStatusChanged
     {

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Molten.Networking
+namespace Molten.Net
 {
     internal static class ConnectionStatusExtension
     {

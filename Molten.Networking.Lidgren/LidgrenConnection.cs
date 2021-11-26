@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Molten.Networking
+namespace Molten.Net
 {
     public class LidgrenConnection : INetworkConnection
     {
@@ -20,7 +20,9 @@ namespace Molten.Networking
         internal NetConnection Connection => _connection;
 
         public string Host => _connection.RemoteEndPoint.Address.ToString();
+
         public int Port => _connection.RemoteEndPoint.Port;
+
         public ConnectionStatus Status => _connection.Status.ToMolten();
     }
 }
