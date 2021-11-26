@@ -85,11 +85,6 @@ namespace Molten.Net
 
         protected internal Logger Log { get; }
 
-
-        //protected internal abstract void OnUpdate(Timing timing);
-        //protected internal abstract void OnStop();
-        //protected internal abstract void OnDispose();
-
         #endregion
 
     }

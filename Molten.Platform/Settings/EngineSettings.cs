@@ -23,6 +23,7 @@ namespace Molten
             Graphics = new GraphicsSettings();
             Input = new InputSettings();
             UI = new UISettings();
+            Network = new NetworkSettings();
         }
 
         /// <summary>

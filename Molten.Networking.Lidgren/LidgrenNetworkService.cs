@@ -11,20 +11,27 @@ namespace Molten.Net
 {
     public class LidgrenNetworkService : NetworkService
     {
+        private const int CLIENT_PORT = 3643;
+
         NetPeerConfiguration _configuration;
         NetPeer _peer;
 
         protected override ThreadingMode OnStart()
         {
             _configuration = new NetPeerConfiguration(Identity);
-            _configuration.Port = Settings.Network.Port;
-            _configuration.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
             //_configuration.LocalAddress = System.Net.IPAddress.Loopback;
 
             if (Settings.Network.Mode == NetworkMode.Server)
+            {
+                _configuration.Port = Settings.Network.Port;
+                _configuration.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
                 _peer = new NetServer(_configuration);
+            }
             else
+            {
+                _configuration.Port = CLIENT_PORT;
                 _peer = new NetClient(_configuration);
+            }
 
             _peer.Start();
             Log.WriteLine($"Started network {Settings.Network.Mode} on port {_peer.Port}.");
@@ -48,10 +55,10 @@ namespace Molten.Net
             {
                 NetOutgoingMessage sendMsg = _peer.CreateMessage();
                 sendMsg.Write(data);
-                _peer.Connect(host, port, sendMsg);
+                connection = _peer.Connect(host, port, sendMsg);
             }
             else
-                _peer.Connect(host, port);
+                connection = _peer.Connect(host, port);
             Log.WriteLine($"Connecting to {host}:{port}.");
 
             return new LidgrenConnection(connection);
@@ -116,9 +123,9 @@ namespace Molten.Net
                     case NetIncomingMessageType.StatusChanged:
                         NetConnectionStatus status = (NetConnectionStatus)msg.ReadByte();
                         _inbox.Enqueue(new LidgrenConnectionStatusChanged(msg));
-                        Log.WriteDebugLine("Recieved status change: " + Enum.GetName(typeof(NetConnectionStatus), status) + " - " + msg.ReadString());
+                        Log.WriteDebugLine($"Recieved status change: {status} - {msg.ReadString()}");
                         break;
-
+                        
                     default:
                         Log.WriteError("Unhandled message type: " + msg.MessageType);
                         break;

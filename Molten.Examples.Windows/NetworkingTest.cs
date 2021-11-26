@@ -1,5 +1,7 @@
 ﻿using Molten.Font;
 using Molten.Graphics;
+using Molten.Net;
+using Molten.Net.Message;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,63 +12,65 @@ using System.Threading.Tasks;
 
 namespace Molten.Samples
 {
-    public class NetworkingTest : SampleSceneGame
+    public class NetworkingTest : NetSampleGame
     {
-        private const string NET_IDENTITY = "Molten Network Test";
-        private const int NET_PORT = 2134;
-
-
         public override string Description => "A basic networking test.";
 
-        Networking.LidgrenNetworkService _client;
+        Net.LidgrenNetworkService _client;
+        Threading.ThreadManager _clientThreadManager;
+        INetworkConnection _serverConnection;
 
         public NetworkingTest() 
             : base("Networking Test")
         {
-            
+
+        }
+
+        protected override void OnStart(EngineSettings settings)
+        {
+            base.OnStart(settings);
+            settings.Network.Mode = NetworkMode.Server;
         }
 
         protected override void OnInitialize(Engine engine)
         {
-            if (engine.NetworkService == null)
-            {
-                base.LoadNetworkingService<Networking.LidgrenNetworkService>();
-                engine.StartNetworkService();
-
-                engine.NetworkService.Start(Networking.Enums.ServiceType.Server, NET_PORT, NET_IDENTITY);
-            }
-            
-
-            _client = new Networking.LidgrenNetworkService();
-            _client.Start(Networking.Enums.ServiceType.Client, NET_PORT + 1, NET_IDENTITY);
-            _client.Connect(System.Net.IPAddress.Loopback.ToString(), NET_PORT, Encoding.UTF8.GetBytes("Hail!"));
-
-            _client.SendMessage(new Networking.Message.NetworkMessage(Encoding.UTF8.GetBytes("Message1"), Networking.Enums.DeliveryMethod.Unreliable, 0));
-            _client.SendMessage(new Networking.Message.NetworkMessage(Encoding.UTF8.GetBytes("Message2"), Networking.Enums.DeliveryMethod.Unreliable, 0));
-            _client.SendMessage(new Networking.Message.NetworkMessage(Encoding.UTF8.GetBytes("Message3"), Networking.Enums.DeliveryMethod.Unreliable, 0));
-
             base.OnInitialize(engine);
+
+            EngineSettings clientSettings = new EngineSettings();
+            clientSettings.Network.Mode = NetworkMode.Client;
+
+            _clientThreadManager = new Threading.ThreadManager(Log);
+            _client = new LidgrenNetworkService();
+            _client.Identity = "Molten Test Client";
+            _client.Initialize(clientSettings, Log);
+            _client.Start(_clientThreadManager, Log);
+            _serverConnection = _client.Connect(System.Net.IPAddress.Loopback.ToString(), Settings.Network.Port, Encoding.UTF8.GetBytes("Hail!"));
         }
 
         protected override void OnUpdate(Timing time)
         {
+            if (_serverConnection.Status == ConnectionStatus.Connected)
+            {
+                _client.SendMessage(new NetworkMessage(Encoding.UTF8.GetBytes("Message" + time.CurrentFrame), DeliveryMethod.Unreliable, 0));
+            }
 
-            while (Engine.NetworkService.TryReadMessage(out var iMessage))
+
+            while (Engine.Net.TryReadMessage(out var iMessage))
             {
                 switch (iMessage)
                 {
-                    case Networking.Message.ConnectionRequest connectionRequest:
+                    case ConnectionRequest connectionRequest:
                         string hailMessage = Encoding.UTF8.GetString(connectionRequest.Data);
                         connectionRequest.Approve();
                         Log.WriteDebugLine("[Server]: Approved connection request: " + hailMessage);
                         break;
 
-                    case Networking.Message.NetworkMessage message:
+                    case NetworkMessage message:
                         string messageContent = Encoding.UTF8.GetString(message.Data);
                         Log.WriteDebugLine("[Server]: Recieved message: " + messageContent);
                         break;
 
-                    case Networking.Message.ConnectionStatusChanged message:
+                    case ConnectionStatusChanged message:
                         string content = Encoding.ASCII.GetString(message.Data);
                         Log.WriteDebugLine($"[Server][{message.Connection.Host}]: Connection status changed: " + content);
                         break;
@@ -92,18 +96,18 @@ namespace Molten.Samples
             {
                 switch (iMessage)
                 {
-                    //case Networking.Message.ConnectionRequest connectionRequest:
+                    //case ConnectionRequest connectionRequest:
                     //    string hailMessage = Encoding.ASCII.GetString(connectionRequest.Data);
                     //    Console.WriteLine("[Client] Recieved connection request: " + hailMessage);
                     //    connectionRequest.Approve();
                     //    break;
 
-                    case Networking.Message.NetworkMessage message:
+                    case NetworkMessage message:
                         string messageContent = Encoding.ASCII.GetString(message.Data);
                         Log.WriteDebugLine("[Client]: Recieved message: " + messageContent);
                         break;
 
-                    case Networking.Message.ConnectionStatusChanged message:
+                    case ConnectionStatusChanged message:
                         string content = Encoding.ASCII.GetString(message.Data);
                         Log.WriteDebugLine($"[Client][{message.Connection.Host}]: Connection status changed: " + content);
                         break;
@@ -116,8 +120,8 @@ namespace Molten.Samples
 
         protected override void OnClose()
         {
-            Engine.StopNetworkService();
             _client.Dispose();
+            _clientThreadManager.Dispose();
         }
     }
 }
