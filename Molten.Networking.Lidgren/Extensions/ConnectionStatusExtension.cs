@@ -1,5 +1,5 @@
 ﻿using Lidgren.Network;
-using Molten.Networking.Enums;
+using Molten.Net;
 using System;
 using System.Collections.Generic;
 using System.Linq;

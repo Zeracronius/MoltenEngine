@@ -14,6 +14,11 @@ namespace Molten.Net
         protected readonly ThreadedQueue<INetworkMessage> _inbox;
         protected readonly ThreadedQueue<(INetworkMessage, INetworkConnection[])> _outbox;
 
+        /// <summary>
+        /// Gets the network identifier of the current network service.
+        /// </summary>
+        public string Identity { get; set; } = "Molten Player";
+
         public NetworkService()
         {
             Log = Logger.Get();
@@ -24,24 +29,6 @@ namespace Molten.Net
 
         #region Public
         public int RecievedMessages => _inbox.Count;
-
-        // Called by network service thread.
-        public void Update(Timing timing)
-        {
-            OnUpdate(timing);
-        }
-
-        public void Dispose()
-        {
-            OnDispose();
-            Log.Dispose();
-        }
-
-        public void Stop()
-        {
-            _outbox.Clear();
-            OnStop();
-        }
 
         /// <summary>
         /// Puts the message into outbox to be sent on next update.
@@ -72,12 +59,9 @@ namespace Molten.Net
 
         #region Protected
 
-        //protected internal abstract void OnUpdate(Timing timing);
-        //protected internal abstract void OnStop();
-        //protected internal abstract void OnDispose();
         protected override void OnInitialize(EngineSettings settings, Logger log)
         {
-            throw new NotImplementedException();
+
         }
 
         protected override ThreadingMode OnStart()
@@ -94,15 +78,17 @@ namespace Molten.Net
 
         protected override void OnDispose()
         {
+            base.OnDispose();
+            _outbox.Clear();
             Log.Dispose();
         }
 
         protected internal Logger Log { get; }
 
-        /// <summary>
-        /// Gets the network identifier of the current network service.
-        /// </summary>
-        public string Identity { get; set; } = "Molten Player";
+
+        //protected internal abstract void OnUpdate(Timing timing);
+        //protected internal abstract void OnStop();
+        //protected internal abstract void OnDispose();
 
         #endregion
 

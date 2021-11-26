@@ -68,13 +68,6 @@ namespace Molten.Net
             }
         }
 
-        protected override void OnDispose()
-        {
-            OnStop();
-        }
-
-
-
         private void SendMessages()
         {
             IList<NetConnection> connections = null;
@@ -134,12 +127,26 @@ namespace Molten.Net
             }
         }
 
-        protected override void OnStop()
+        private void Shutdown()
         {
             foreach (NetConnection connection in _peer.Connections)
                 connection.Disconnect("Client shutdown.");
 
             _peer.Shutdown("Client shutdown.");
         }
+
+        protected override void OnStop()
+        {
+            Shutdown();
+            base.OnStop();
+        }
+
+        protected override void OnDispose()
+        {
+            Shutdown();
+            base.OnDispose();
+        }
+
+
     }
 }
