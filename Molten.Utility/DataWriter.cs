@@ -6,23 +6,15 @@ using System.Threading.Tasks;
 
 namespace Molten
 {
-    internal unsafe struct DataWriter
+    public unsafe struct DataWriter
     {
         byte[] _bytes;
         int _bytePosition;
-        Encoding _encoding;
 
         public DataWriter()
         {
             _bytes = new byte[20];
             _bytePosition = 0;
-            _encoding = Encoding.UTF8;
-        }
-
-        public DataWriter(Encoding encoding)
-            : this()
-        {
-            _encoding = encoding;
         }
 
         public void Clear()
@@ -40,16 +32,17 @@ namespace Molten
             }
         }
 
-        public void Write(string text)
-        {
-            byte[] textBytes = _encoding.GetBytes(text);
 
-            EnsureCapacity(textBytes.Length);
-            fixed (byte* bytesPointer = _bytes)
-            {
-                fixed (byte* textPointer = textBytes)
-                    Buffer.MemoryCopy(textPointer, bytesPointer, _bytePosition, textBytes.Length);
-            }
+        public void WriteStringEnclosed(string text, Encoding encoding)
+        {
+            WriteString(text + "\0", encoding);
+        }
+
+        public void WriteString(string text, Encoding encoding)
+        {
+            byte[] textBytes = encoding.GetBytes(text);
+            fixed (byte* bytes = textBytes)
+                Write(bytes, textBytes.Length);
         }
 
         public void Write<T>(T value) where T : unmanaged
@@ -60,12 +53,19 @@ namespace Molten
         public void Write<T>(T* valuePointer) where T : unmanaged
         {
             int valueSize = sizeof(T);
-            fixed (byte* ptrArray = _bytes)
+            Write(valuePointer, valueSize);
+        }
+
+        private void Write(void* valuePointer, int valueSize)
+        {
+            EnsureCapacity(valueSize);
+            fixed (byte* bytesPointer = _bytes)
             {
-                Buffer.MemoryCopy(valuePointer, ptrArray, _bytePosition, valueSize);
+                Buffer.MemoryCopy(valuePointer, bytesPointer + _bytePosition, _bytes.Length - _bytePosition, valueSize);
                 _bytePosition += valueSize;
             }
         }
+
 
         public byte[] GetData()
         {

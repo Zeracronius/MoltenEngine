@@ -41,7 +41,7 @@ namespace Molten.Samples
 
             _clientThreadManager = new Threading.ThreadManager(Log);
             _client = new LidgrenNetworkService();
-            _client.Identity = "Molten Test Client";
+            _client.Identity = Net.Identity;
             _client.Initialize(clientSettings, Log);
             _client.Start(_clientThreadManager, Log);
             _serverConnection = _client.Connect(System.Net.IPAddress.Loopback.ToString(), Settings.Network.Port, Encoding.UTF8.GetBytes("Hail!"));
@@ -51,7 +51,12 @@ namespace Molten.Samples
         {
             if (_serverConnection.Status == ConnectionStatus.Connected)
             {
-                _client.SendMessage(new NetworkMessage(Encoding.UTF8.GetBytes("Message" + time.CurrentFrame), DeliveryMethod.Unreliable, 0));
+                DataWriter writer = new DataWriter();
+                writer.Write<byte>(1);
+                writer.Write(1);
+                writer.WriteStringEnclosed("Message" + time.CurrentFrame, Encoding.UTF8);
+                writer.WriteString("In other news...", Encoding.UTF8);
+                _client.SendMessage(new NetworkMessage(writer.GetData(), DeliveryMethod.Unreliable, 0));
             }
 
 
@@ -66,7 +71,16 @@ namespace Molten.Samples
                         break;
 
                     case NetworkMessage message:
-                        string messageContent = Encoding.UTF8.GetString(message.Data);
+
+
+                        DataReader reader = new DataReader(message.Data);
+                        reader.Read<byte>();
+                        reader.Read<int>();
+                        string messageContent = reader.ReadStringEnclosed(Encoding.UTF8);
+                        string anotherString = reader.ReadStringEnclosed(Encoding.UTF8);
+
+
+                        //string messageContent = Encoding.ASCII.GetString(message.Data, 1, message.Data.Length - 1);
                         Log.WriteDebugLine("[Server]: Recieved message: " + messageContent);
                         break;
 
@@ -103,7 +117,14 @@ namespace Molten.Samples
                     //    break;
 
                     case NetworkMessage message:
-                        string messageContent = Encoding.ASCII.GetString(message.Data);
+
+                        DataReader reader = new DataReader(message.Data);
+                        reader.Read<byte>();
+                        string messageContent = reader.ReadStringEnclosed(Encoding.UTF8);
+                        string anotherString = reader.ReadStringEnclosed(Encoding.UTF8);
+
+
+                        //string messageContent = Encoding.ASCII.GetString(message.Data, 1, message.Data.Length - 1);
                         Log.WriteDebugLine("[Client]: Recieved message: " + messageContent);
                         break;
 
