@@ -9,6 +9,7 @@ namespace Molten
         public NetworkSettings()
         {
             Port = AddSetting<int>("net_port", 6113);
+            ListeningAddress = AddSetting<string>("net_listeningaddress");
         }
 
         /// <summary>
@@ -21,5 +22,6 @@ namespace Molten
         /// </summary>
         [DataMember]
         public SettingValue<int> Port { get; }
+        public SettingValue<string> ListeningAddress { get; }
     }
 }
