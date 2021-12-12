@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Molten.Samples
 {
-    public abstract class NetSampleGame : SampleGame
+    public abstract class NetSampleGame<T> : SampleGame where T : NetworkService, new()
     {
         SceneObject _player; 
 
@@ -19,7 +19,7 @@ namespace Molten.Samples
         protected override void OnStart(EngineSettings settings)
         {
             base.OnStart(settings);
-            settings.AddService<LidgrenNetworkService>();
+            settings.AddService<T>();
         }
 
         public NetworkService Net => Engine.Net;

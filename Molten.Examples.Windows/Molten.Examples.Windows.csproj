@@ -392,6 +392,10 @@
       <Project>{e59938af-a9d4-4963-b4ac-61e53d05527e}</Project>
       <Name>Molten.Math</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Molten.Net.MNet\Molten.Net.MNet.csproj">
+      <Project>{9D34356D-BFAD-42A2-B6FC-B08374E77361}</Project>
+      <Name>Molten.Net.MNet</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Molten.Networking.Lidgren\Molten.Net.Lidgren.csproj">
       <Project>{C2B50475-35FB-4DAD-9632-E788517CF6B8}</Project>
       <Name>Molten.Net.Lidgren</Name>

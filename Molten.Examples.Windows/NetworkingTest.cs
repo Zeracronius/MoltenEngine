@@ -2,6 +2,7 @@
 using Molten.Graphics;
 using Molten.Net;
 using Molten.Net.Message;
+using Molten.Net.MNet;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,11 +13,11 @@ using System.Threading.Tasks;
 
 namespace Molten.Samples
 {
-    public class NetworkingTest : NetSampleGame
+    public class NetworkingTest : NetSampleGame<MNetService>
     {
         public override string Description => "A basic networking test.";
 
-        Net.LidgrenNetworkService _client;
+        Net.MNet.MNetService _client;
         Threading.ThreadManager _clientThreadManager;
         INetworkConnection _serverConnection;
 
@@ -30,6 +31,7 @@ namespace Molten.Samples
         {
             base.OnStart(settings);
             settings.Network.Mode = NetworkMode.Server;
+            settings.Network.ListeningAddress.Value = "127.0.0.1";
         }
 
         protected override void OnInitialize(Engine engine)
@@ -38,9 +40,11 @@ namespace Molten.Samples
 
             EngineSettings clientSettings = new EngineSettings();
             clientSettings.Network.Mode = NetworkMode.Client;
+            clientSettings.Network.Port.Value = 6114;
+            clientSettings.Network.ListeningAddress.Value = "127.0.0.1";
 
             _clientThreadManager = new Threading.ThreadManager(Log);
-            _client = new LidgrenNetworkService();
+            _client = new MNetService();
             _client.Identity = Net.Identity;
             _client.Initialize(clientSettings, Log);
             _client.Start(_clientThreadManager, Log);

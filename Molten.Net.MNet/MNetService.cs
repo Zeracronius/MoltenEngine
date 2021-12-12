@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Molten.Net.MNet
 {
-    internal class MNetService : NetworkService
+    public class MNetService : NetworkService
     {
         private List<MNetConnection> _connections;
         private Socket _tcpListener;
@@ -91,7 +91,8 @@ namespace Molten.Net.MNet
                 int position = 0;
                 foreach (byte[] usedBuffer in filled)
                 {
-                    usedBuffer.CopyTo(data, position);
+                    int remainingBytes = Math.Min(totalBytes - position, 1024);
+                    Array.Copy(buffer, 0, data, position, remainingBytes);
                     position += usedBuffer.Length;
                     _buffers.Push(buffer);
                 }
@@ -107,10 +108,11 @@ namespace Molten.Net.MNet
             else
                 buffer = new byte[1024];
 
-            SocketReceiveFromResult result = await _tcpListener.ReceiveFromAsync(new ArraySegment<byte>(buffer, 0, buffer.Length), SocketFlags.None, new IPEndPoint(IPAddress.Any, 0));
+            SocketReceiveFromResult result = await _udpListener.ReceiveFromAsync(new ArraySegment<byte>(buffer, 0, buffer.Length), SocketFlags.None, new IPEndPoint(IPAddress.Any, 0));
             
             byte[] data = new byte[result.ReceivedBytes];
-            buffer.CopyTo(data, 0);
+
+            Array.Copy(buffer, data, result.ReceivedBytes);
 
             _buffers.Push(buffer);
             _inbox.Enqueue(new NetworkMessage(data, DeliveryMethod.Unreliable, 0));
