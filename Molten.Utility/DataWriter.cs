@@ -45,6 +45,13 @@ namespace Molten
                 Write(bytes, textBytes.Length);
         }
 
+        public void Write<T>(T[] data) where T : unmanaged
+        {
+            int valueSize = sizeof(T) * data.Length;
+            fixed (T* bytes = data)
+                Write(bytes, valueSize);
+        }
+
         public void Write<T>(T value) where T : unmanaged
         {
             Write<T>(&value);
