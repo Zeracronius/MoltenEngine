@@ -162,15 +162,18 @@ namespace Molten.Net.MNet
                             MNetConnection mnetConnectionApproved = _connections.FirstOrDefault(x => x.Endpoint.Address.Equals((connection.RemoteEndPoint as IPEndPoint).Address.MapToIPv4()));
                             if (mnetConnectionApproved != null)
                                 mnetConnectionApproved.Status = ConnectionStatus.Connected;
+
+                            message = new MNetConnectionStatusChanged(mnetConnectionApproved, ConnectionStatus.Connected, data, DeliveryMethod.ReliableOrdered, 0);
                             break;
 
                         case MNetMessageType.ConnectionRejected:
                             Log.Write("Connection rejected: " + Encoding.UTF8.GetString(data));
-                            MNetConnection mnetConnectionRejected = _connections.FirstOrDefault(x => x.Endpoint.Equals(connection.RemoteEndPoint));
+                            MNetConnection mnetConnectionRejected = _connections.FirstOrDefault(x => x.Endpoint.Address.Equals((connection.RemoteEndPoint as IPEndPoint).Address.MapToIPv4()));
                             if (mnetConnectionRejected != null)
                                 mnetConnectionRejected.Status = ConnectionStatus.Disconnected;
                             _connections.Remove(mnetConnectionRejected);
-                            //TODO ConnectionStatusChanged
+
+                            message = new MNetConnectionStatusChanged(mnetConnectionRejected, ConnectionStatus.Disconnected, data, DeliveryMethod.ReliableOrdered, 0);
                             break;
 
                         case MNetMessageType.Data:

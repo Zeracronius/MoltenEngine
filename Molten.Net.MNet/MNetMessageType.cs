@@ -14,5 +14,6 @@ namespace Molten.Net.MNet
         ConnectionRejected = 3,
         Data = 4,
         ErrorMessage = 5,
+        Heartbeat = 6,
     }
 }

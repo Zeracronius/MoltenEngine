@@ -57,6 +57,7 @@
   <ItemGroup>
     <Compile Include="MNetConnection.cs" />
     <Compile Include="MNetConnectionRequest.cs" />
+    <Compile Include="MNetConnectionStatusChanged.cs" />
     <Compile Include="MNetMessageType.cs" />
     <Compile Include="MNetService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
