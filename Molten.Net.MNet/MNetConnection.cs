@@ -22,11 +22,11 @@ namespace Molten.Net.MNet
         internal ManualResetEvent UDPWaitHandle { get; }
         internal ManualResetEvent TCPWaitHandle { get; }
 
-        internal MNetConnection(IPEndPoint endpoint)
+        private MNetConnection(IPEndPoint endpoint)
         {
             Host = endpoint.Address.ToString();
             Port = endpoint.Port;
-
+            
             Status = ConnectionStatus.Disconnected;
             Endpoint = endpoint;
             UDPSocket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
@@ -41,6 +41,12 @@ namespace Molten.Net.MNet
             : this(new IPEndPoint(new IPAddress(host.Split('.').Select(x => byte.Parse(x)).ToArray()), port))
         {
 
+        }
+
+        internal MNetConnection(IPAddress address, int port)
+            : this(new IPEndPoint(address, port))
+        {
+            
         }
 
         public void Dispose()

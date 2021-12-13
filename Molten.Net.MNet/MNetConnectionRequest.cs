@@ -28,7 +28,8 @@ namespace Molten.Net.MNet
 
         public override void Reject(string reason)
         {
-            _service.RejectConnection(_connection);
+            _connection.Status = ConnectionStatus.Disconnected;
+            _service.RejectConnection(_connection, reason);
         }
     }
 }
