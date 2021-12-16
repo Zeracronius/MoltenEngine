@@ -47,7 +47,7 @@ namespace Molten
         /// </summary>
         /// <param name="encoding"></param>
         /// <returns></returns>
-        public string ReadStringEnclosed(Encoding encoding)
+        public string ReadString(Encoding encoding)
         {
             byte endOfString = encoding.GetBytes("\0")[0];
 
@@ -71,7 +71,7 @@ namespace Molten
             return result;
         }
 
-        public string ReadString(Encoding encoding)
+        public string ReadStringRaw(Encoding encoding)
         {
             fixed (byte* dataPointer = _data)
             {

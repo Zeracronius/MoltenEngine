@@ -87,7 +87,7 @@ namespace Molten.Net
 
                 NetOutgoingMessage sendMsg = _peer.CreateMessage();
                 sendMsg.Write(outgoing.message.Data);
-                _peer.SendMessage(sendMsg, connections, outgoing.message.DeliveryMethod.ToLidgren(), outgoing.message.Sequence);
+                _peer.SendMessage(sendMsg, connections, outgoing.message.DeliveryMethod.ToLidgren(), outgoing.message.Channel);
             }
         }
         private void ReadMessages()

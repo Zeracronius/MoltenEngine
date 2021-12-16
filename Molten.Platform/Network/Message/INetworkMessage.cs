@@ -9,7 +9,7 @@ namespace Molten.Net.Message
     public interface INetworkMessage
     {
         byte[] Data { get; }
-        int Sequence { get; }
+        int Channel { get; }
         DeliveryMethod DeliveryMethod { get; }
     }
 }

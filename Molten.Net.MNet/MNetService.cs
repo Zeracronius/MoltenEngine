@@ -20,18 +20,22 @@ namespace Molten.Net.MNet
         private ThreadedQueue<byte[]> _buffers;
         private EndPoint _localEndPoint;
 
-        Thread _tcpListeningThread;
-        Thread _udpListeningThread;
+        private Thread _tcpListeningThread;
+        private Thread _udpListeningThread;
+
+        private DataWriter _dataWriter;
 
         private struct MessagePrefix
         {
-            internal int Sequence { get; }
+            internal int Channel { get; }
             internal MNetMessageType Type { get; }
+            internal uint SequenceNumber { get; }
 
-            public MessagePrefix(int sequence, MNetMessageType type)
+            public MessagePrefix(int channel, MNetMessageType type, uint sequenceNumber)
             {
-                Sequence = sequence;
+                Channel = channel;
                 Type = type;
+                SequenceNumber = sequenceNumber;
             }
         }
         private static int MessagePrefixSize = System.Runtime.InteropServices.Marshal.SizeOf<MessagePrefix>();
@@ -43,6 +47,7 @@ namespace Molten.Net.MNet
             _tcpListener = new Socket(SocketType.Stream, ProtocolType.Tcp);
             _udpListener = new Socket(SocketType.Dgram, ProtocolType.Udp);
             _buffers = new ThreadedQueue<byte[]>();
+            _dataWriter = new DataWriter();
         }
 
         protected override void OnInitialize(EngineSettings settings, Logger log)
@@ -69,12 +74,12 @@ namespace Molten.Net.MNet
             connection.Status = ConnectionStatus.InitiatedConnect;
             _connections.Add(connection);
 
-            DataWriter writer = new DataWriter();
-            writer.Write(new MessagePrefix((_localEndPoint as IPEndPoint).Port, MNetMessageType.ConnectionRequest));
+            _dataWriter.Clear();
+            _dataWriter.Write(new MessagePrefix((_localEndPoint as IPEndPoint).Port, MNetMessageType.ConnectionRequest, 0));
             if (data != null)
-                writer.Write(data);
+                _dataWriter.Write(data);
 
-            SendTCP(writer.GetData(), connection);
+            SendTCP(_dataWriter.GetData(), connection);
             return connection;
         }
 
@@ -153,7 +158,7 @@ namespace Molten.Net.MNet
                     {
                         case MNetMessageType.ConnectionRequest:
                             IPEndPoint remoteIP = connection.RemoteEndPoint as IPEndPoint;
-                            MNetConnection newConnection = new MNetConnection(remoteIP.Address.MapToIPv4(), messagePrefix.Sequence);
+                            MNetConnection newConnection = new MNetConnection(remoteIP.Address.MapToIPv4(), messagePrefix.Channel);
                             message = new MNetConnectionRequest(data, DeliveryMethod.ReliableOrdered, 0, newConnection, this);
                             break;
 
@@ -224,7 +229,7 @@ namespace Molten.Net.MNet
                 switch (messagePrefix.Type)
                 {
                     case MNetMessageType.Data:
-                        message = new NetworkMessage(data, DeliveryMethod.Unreliable, messagePrefix.Sequence);
+                        message = new NetworkMessage(data, DeliveryMethod.Unreliable, messagePrefix.Channel);
                         break;
 
                     default:
@@ -237,31 +242,30 @@ namespace Molten.Net.MNet
 
         public void Send(INetworkMessage message, IEnumerable<MNetConnection> connections)
         {
-            DataWriter writer = new DataWriter();
-            writer.Write(new MessagePrefix(message.Sequence, MNetMessageType.Data));
-            writer.Write(message.Data);
-
-            switch (message.DeliveryMethod)
+            foreach (MNetConnection connection in connections)
             {
-                // UDP
-                case DeliveryMethod.Unreliable:
-                case DeliveryMethod.UnreliableSequenced:
-                    SendUDP(writer.GetData(), connections.Cast<MNetConnection>());
+                if (connection.Status != ConnectionStatus.Connected)
+                    return;
+
+                _dataWriter.Clear();
+                _dataWriter.Write(new MessagePrefix(message.Channel, MNetMessageType.Data, connection.GetSequenceNumber()));
+                _dataWriter.Write(message.Data);
+
+                switch (message.DeliveryMethod)
+                {
+                    // UDP
+                    case DeliveryMethod.Unreliable:
+                    case DeliveryMethod.UnreliableSequenced:
+                        SendUDP(_dataWriter.GetData(), connection);
                     break;
 
-                // TCP
-                case DeliveryMethod.ReliableUnordered:
-                case DeliveryMethod.ReliableSequenced:
-                case DeliveryMethod.ReliableOrdered:
-                    foreach (MNetConnection connection in connections)
-                    {
-                        if (connection.Status != ConnectionStatus.Connected)
-                            continue;
-
-                        SendTCP(writer.GetData(), connection);
-                    }
-
+                    // TCP
+                    case DeliveryMethod.ReliableUnordered:
+                    case DeliveryMethod.ReliableSequenced:
+                    case DeliveryMethod.ReliableOrdered:
+                        SendTCP(_dataWriter.GetData(), connection);
                     break;
+                }
             }
         }
 
@@ -304,7 +308,7 @@ namespace Molten.Net.MNet
             (e.UserToken as MNetConnection).TCPWaitHandle.Set();
         }
 
-        private void SendUDP(byte[] data, IEnumerable<MNetConnection> connections)
+        private void SendUDP(byte[] data, MNetConnection connection)
         {
             /*
              If you are using a connectionless protocol such as UDP
@@ -312,18 +316,12 @@ namespace Molten.Net.MNet
              Use BeginReceiveFrom and EndReceiveFrom to receive datagrams.
             */
 
-            foreach (MNetConnection connection in connections)
-            {
-                if (connection.Status != ConnectionStatus.Connected)
-                    continue;
+            // Yield until socket is available.
+            while (connection.UDPWaitHandle.WaitOne(10) == false)
+                System.Threading.Thread.Yield();
 
-                // Yield until socket is available.
-                while (connection.UDPWaitHandle.WaitOne(10) == false)
-                    System.Threading.Thread.Yield();
-
-                connection.UDPWaitHandle.Reset();
-                connection.UDPSocket.BeginSendTo(data, 0, data.Length, SocketFlags.None, connection.Endpoint, UDPPacketSent, connection);
-            }
+            connection.UDPWaitHandle.Reset();
+            connection.UDPSocket.BeginSendTo(data, 0, data.Length, SocketFlags.None, connection.Endpoint, UDPPacketSent, connection);
         }
 
         private void UDPPacketSent(IAsyncResult result)
@@ -339,19 +337,19 @@ namespace Molten.Net.MNet
         {
             _connections.Add(connection);
 
-            DataWriter writer = new DataWriter();
-            writer.Write(new MessagePrefix(0, MNetMessageType.ConnectionApproved));
-            SendTCP(writer.GetData(), connection);
+            _dataWriter.Clear();
+            _dataWriter.Write(new MessagePrefix(0, MNetMessageType.ConnectionApproved, 0));
+            SendTCP(_dataWriter.GetData(), connection);
         }
 
         internal void RejectConnection(MNetConnection connection, string reason)
         {
-            DataWriter writer = new DataWriter();
-            writer.Write(new MessagePrefix(0, MNetMessageType.ConnectionRejected));
+            _dataWriter.Clear();
+            _dataWriter.Write(new MessagePrefix(0, MNetMessageType.ConnectionRejected, 0));
             if (reason != null)
-                writer.WriteStringEnclosed(reason, Encoding.UTF8);
+                _dataWriter.WriteString(reason, Encoding.UTF8);
 
-            SendTCP(writer.GetData(), connection);
+            SendTCP(_dataWriter.GetData(), connection);
         }
 
         protected override void OnDispose()

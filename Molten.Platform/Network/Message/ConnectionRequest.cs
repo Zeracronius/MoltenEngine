@@ -9,13 +9,13 @@ namespace Molten.Net.Message
     public abstract class ConnectionRequest : INetworkMessage
     {
         public byte[] Data { get; }
-        public int Sequence { get; }
+        public int Channel { get; }
         public DeliveryMethod DeliveryMethod { get; }
 
         protected ConnectionRequest(byte[] data, DeliveryMethod deliveryMethod, int sequence)
         {
             Data = data;
-            Sequence = sequence;
+            Channel = sequence;
             DeliveryMethod = deliveryMethod;
         }
 

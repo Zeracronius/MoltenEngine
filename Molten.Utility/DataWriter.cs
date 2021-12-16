@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Molten
 {
-    public unsafe struct DataWriter
+    public unsafe class DataWriter
     {
         byte[] _bytes;
         int _bytePosition;
@@ -33,12 +33,12 @@ namespace Molten
         }
 
 
-        public void WriteStringEnclosed(string text, Encoding encoding)
+        public void WriteString(string text, Encoding encoding)
         {
-            WriteString(text + "\0", encoding);
+            WriteStringRaw(text + "\0", encoding);
         }
 
-        public void WriteString(string text, Encoding encoding)
+        public void WriteStringRaw(string text, Encoding encoding)
         {
             byte[] textBytes = encoding.GetBytes(text);
             fixed (byte* bytes = textBytes)
@@ -73,7 +73,10 @@ namespace Molten
             }
         }
 
-
+        /// <summary>
+        /// Create a new array with no excess slots.
+        /// </summary>
+        /// <returns></returns>
         public byte[] GetData()
         {
             // Create a new array with no excess slots.

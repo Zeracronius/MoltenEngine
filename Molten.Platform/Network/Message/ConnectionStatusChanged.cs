@@ -10,13 +10,13 @@ namespace Molten.Net.Message
     public abstract class ConnectionStatusChanged : INetworkMessage
     {
         public byte[] Data { get; }
-        public int Sequence { get; }
+        public int Channel { get; }
         public DeliveryMethod DeliveryMethod { get; }
 
         protected ConnectionStatusChanged(byte[] data, DeliveryMethod deliveryMethod, int sequence)
         {
             Data = data;
-            Sequence = sequence;
+            Channel = sequence;
             DeliveryMethod = deliveryMethod;
         }
 

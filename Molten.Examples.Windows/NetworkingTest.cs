@@ -58,8 +58,8 @@ namespace Molten.Samples
                 DataWriter writer = new DataWriter();
                 writer.Write<byte>(1);
                 writer.Write(1);
-                writer.WriteStringEnclosed("Message" + time.CurrentFrame, Encoding.UTF8);
-                writer.WriteString("In other news...", Encoding.UTF8);
+                writer.WriteString("Message" + time.CurrentFrame, Encoding.UTF8);
+                writer.WriteStringRaw("In other news...", Encoding.UTF8);
                 _client.SendMessage(new NetworkMessage(writer.GetData(), DeliveryMethod.Unreliable, 0));
             }
 
@@ -80,8 +80,8 @@ namespace Molten.Samples
                         DataReader reader = new DataReader(message.Data);
                         reader.Read<byte>();
                         reader.Read<int>();
-                        string messageContent = reader.ReadStringEnclosed(Encoding.UTF8);
-                        string anotherString = reader.ReadStringEnclosed(Encoding.UTF8);
+                        string messageContent = reader.ReadString(Encoding.UTF8);
+                        string anotherString = reader.ReadString(Encoding.UTF8);
 
 
                         //string messageContent = Encoding.ASCII.GetString(message.Data, 1, message.Data.Length - 1);
@@ -124,8 +124,8 @@ namespace Molten.Samples
 
                         DataReader reader = new DataReader(message.Data);
                         reader.Read<byte>();
-                        string messageContent = reader.ReadStringEnclosed(Encoding.UTF8);
-                        string anotherString = reader.ReadStringEnclosed(Encoding.UTF8);
+                        string messageContent = reader.ReadString(Encoding.UTF8);
+                        string anotherString = reader.ReadString(Encoding.UTF8);
 
 
                         //string messageContent = Encoding.ASCII.GetString(message.Data, 1, message.Data.Length - 1);
