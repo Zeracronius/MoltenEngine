@@ -18,7 +18,9 @@ namespace Molten.Net.MNet
         internal IPEndPoint Endpoint { get; }
         internal Socket TCPSocket { get; }
         internal Socket UDPSocket { get; }
-        internal uint SequenceNumber { private set; get; }
+
+        internal Dictionary<int, uint> InboundSequenceNumbers { get; }
+        internal Dictionary<int, uint> _outboundSequenceNumbers;
 
         internal ManualResetEvent UDPWaitHandle { get; }
         internal ManualResetEvent TCPWaitHandle { get; }
@@ -27,7 +29,8 @@ namespace Molten.Net.MNet
         {
             Host = endpoint.Address.ToString();
             Port = endpoint.Port;
-            SequenceNumber = 0;
+            InboundSequenceNumbers = new Dictionary<int, uint>();
+            _outboundSequenceNumbers = new Dictionary<int, uint>();
             
             Status = ConnectionStatus.Disconnected;
             Endpoint = endpoint;
@@ -51,9 +54,15 @@ namespace Molten.Net.MNet
             
         }
 
-        internal uint GetSequenceNumber()
+        internal uint GetOutboundSequenceNumber(int channel)
         {
-            return SequenceNumber++;
+            if (_outboundSequenceNumbers.ContainsKey(channel) == false)
+            {
+                _outboundSequenceNumbers[channel] = 1;
+                return 0;
+            }
+
+            return _outboundSequenceNumbers[channel]++;
         }
 
         public void Dispose()

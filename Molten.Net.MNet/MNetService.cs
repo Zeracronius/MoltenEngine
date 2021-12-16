@@ -30,12 +30,14 @@ namespace Molten.Net.MNet
             internal int Channel { get; }
             internal MNetMessageType Type { get; }
             internal uint SequenceNumber { get; }
+            internal DeliveryMethod DeliveryMethod { get; }
 
-            public MessagePrefix(int channel, MNetMessageType type, uint sequenceNumber)
+            public MessagePrefix(int channel, MNetMessageType type, DeliveryMethod deliveryMethod, uint sequenceNumber)
             {
                 Channel = channel;
                 Type = type;
                 SequenceNumber = sequenceNumber;
+                DeliveryMethod = deliveryMethod;
             }
         }
         private static int MessagePrefixSize = System.Runtime.InteropServices.Marshal.SizeOf<MessagePrefix>();
@@ -75,7 +77,7 @@ namespace Molten.Net.MNet
             _connections.Add(connection);
 
             _dataWriter.Clear();
-            _dataWriter.Write(new MessagePrefix((_localEndPoint as IPEndPoint).Port, MNetMessageType.ConnectionRequest, 0));
+            _dataWriter.Write(new MessagePrefix((_localEndPoint as IPEndPoint).Port, MNetMessageType.ConnectionRequest, DeliveryMethod.ReliableOrdered, 0));
             if (data != null)
                 _dataWriter.Write(data);
 
@@ -153,48 +155,46 @@ namespace Molten.Net.MNet
                         _buffers.Enqueue(buffer);
                     }
 
+                    IPEndPoint remoteIP = connection.RemoteEndPoint as IPEndPoint;
+                    MNetConnection mnetConnection = _connections.FirstOrDefault(x => x.Endpoint.Address.Equals(remoteIP.Address.MapToIPv4()));
                     INetworkMessage message = null;
                     switch (messagePrefix.Type)
                     {
                         case MNetMessageType.ConnectionRequest:
-                            IPEndPoint remoteIP = connection.RemoteEndPoint as IPEndPoint;
                             MNetConnection newConnection = new MNetConnection(remoteIP.Address.MapToIPv4(), messagePrefix.Channel);
-                            message = new MNetConnectionRequest(data, DeliveryMethod.ReliableOrdered, 0, newConnection, this);
+                            message = new MNetConnectionRequest(data, messagePrefix.DeliveryMethod, 0, newConnection, this);
                             break;
 
                         case MNetMessageType.ConnectionApproved:
                             Log.Write("Connection approved.");
-                            MNetConnection mnetConnectionApproved = _connections.FirstOrDefault(x => x.Endpoint.Address.Equals((connection.RemoteEndPoint as IPEndPoint).Address.MapToIPv4()));
-                            if (mnetConnectionApproved != null)
-                                mnetConnectionApproved.Status = ConnectionStatus.Connected;
+                            if (mnetConnection != null)
+                                mnetConnection.Status = ConnectionStatus.Connected;
 
-                            message = new MNetConnectionStatusChanged(mnetConnectionApproved, ConnectionStatus.Connected, data, DeliveryMethod.ReliableOrdered, 0);
+                            message = new MNetConnectionStatusChanged(mnetConnection, ConnectionStatus.Connected, data, messagePrefix.DeliveryMethod, 0);
                             break;
 
                         case MNetMessageType.ConnectionRejected:
                             Log.Write("Connection rejected: " + Encoding.UTF8.GetString(data));
-                            MNetConnection mnetConnectionRejected = _connections.FirstOrDefault(x => x.Endpoint.Address.Equals((connection.RemoteEndPoint as IPEndPoint).Address.MapToIPv4()));
-                            if (mnetConnectionRejected != null)
-                                mnetConnectionRejected.Status = ConnectionStatus.Disconnected;
-                            _connections.Remove(mnetConnectionRejected);
+                            if (mnetConnection != null)
+                                mnetConnection.Status = ConnectionStatus.Disconnected;
+                            _connections.Remove(mnetConnection);
 
-                            message = new MNetConnectionStatusChanged(mnetConnectionRejected, ConnectionStatus.Disconnected, data, DeliveryMethod.ReliableOrdered, 0);
+                            message = new MNetConnectionStatusChanged(mnetConnection, ConnectionStatus.Disconnected, data, messagePrefix.DeliveryMethod, 0);
                             break;
 
                         case MNetMessageType.Data:
-                            message = new NetworkMessage(data, DeliveryMethod.ReliableOrdered, 0);
+                            message = new NetworkMessage(data, messagePrefix.DeliveryMethod, 0);
                             break;
 
                         //case MNetMessageType.ErrorMessage:
                         //    break;
-                
+
                         case MNetMessageType.Unknown:
                         default:
                             throw new NotImplementedException();
                     }
 
-                    if (message != null)
-                        _inbox.Enqueue(message);
+                    HandleSequence(mnetConnection, messagePrefix, message);
                 }
             }
         }
@@ -229,15 +229,54 @@ namespace Molten.Net.MNet
                 switch (messagePrefix.Type)
                 {
                     case MNetMessageType.Data:
-                        message = new NetworkMessage(data, DeliveryMethod.Unreliable, messagePrefix.Channel);
+                        message = new NetworkMessage(data, messagePrefix.DeliveryMethod, messagePrefix.Channel);
                         break;
 
                     default:
                         throw new NotImplementedException();
                 }
 
-                _inbox.Enqueue(message);
+                IPEndPoint remoteIP = endpoint as IPEndPoint;
+                MNetConnection mnetConnection = _connections.FirstOrDefault(x => x.Endpoint.Address.Equals(remoteIP.Address.MapToIPv4()));
+                HandleSequence(mnetConnection, messagePrefix, message);
             }
+        }
+
+
+        private void HandleSequence(MNetConnection mnetConnection, MessagePrefix messagePrefix, INetworkMessage message)
+        {
+            if (mnetConnection != null)
+            {
+                mnetConnection.InboundSequenceNumbers.TryGetValue(message.Channel, out uint currentSequenceNumber);
+
+                switch (message.DeliveryMethod)
+                {
+                    case DeliveryMethod.UnreliableSequenced:
+                    case DeliveryMethod.ReliableSequenced:
+                        // If message sequence number is older (smaller) than the current sequence number, then drop message.
+                        if (messagePrefix.SequenceNumber < currentSequenceNumber)
+                            message = null;
+                        break;
+
+                    case DeliveryMethod.ReliableUnordered:
+                        break;
+
+                    case DeliveryMethod.ReliableOrdered:
+                        // TCP
+                        break;
+
+                    case DeliveryMethod.Unknown:
+                    case DeliveryMethod.Unreliable:
+                    default:
+                        break;
+                }
+
+                if (currentSequenceNumber < messagePrefix.SequenceNumber)
+                    mnetConnection.InboundSequenceNumbers[message.Channel] = messagePrefix.SequenceNumber;
+            }
+
+            if (message != null)
+                _inbox.Enqueue(message);
         }
 
         public void Send(INetworkMessage message, IEnumerable<MNetConnection> connections)
@@ -248,7 +287,7 @@ namespace Molten.Net.MNet
                     return;
 
                 _dataWriter.Clear();
-                _dataWriter.Write(new MessagePrefix(message.Channel, MNetMessageType.Data, connection.GetSequenceNumber()));
+                _dataWriter.Write(new MessagePrefix(message.Channel, MNetMessageType.Data, message.DeliveryMethod, connection.GetOutboundSequenceNumber(message.Channel)));
                 _dataWriter.Write(message.Data);
 
                 switch (message.DeliveryMethod)
@@ -338,14 +377,14 @@ namespace Molten.Net.MNet
             _connections.Add(connection);
 
             _dataWriter.Clear();
-            _dataWriter.Write(new MessagePrefix(0, MNetMessageType.ConnectionApproved, 0));
+            _dataWriter.Write(new MessagePrefix(0, MNetMessageType.ConnectionApproved, DeliveryMethod.ReliableOrdered, 0));
             SendTCP(_dataWriter.GetData(), connection);
         }
 
         internal void RejectConnection(MNetConnection connection, string reason)
         {
             _dataWriter.Clear();
-            _dataWriter.Write(new MessagePrefix(0, MNetMessageType.ConnectionRejected, 0));
+            _dataWriter.Write(new MessagePrefix(0, MNetMessageType.ConnectionRejected, DeliveryMethod.ReliableOrdered, 0));
             if (reason != null)
                 _dataWriter.WriteString(reason, Encoding.UTF8);
 
@@ -356,7 +395,6 @@ namespace Molten.Net.MNet
         {
             _tcpListeningThread.Abort();
             _udpListeningThread.Abort();
-
             base.OnDispose();
         }
     }
