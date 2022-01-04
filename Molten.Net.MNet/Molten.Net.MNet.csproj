@@ -58,7 +58,10 @@
     <Compile Include="MNetConnection.cs" />
     <Compile Include="MNetConnectionRequest.cs" />
     <Compile Include="MNetConnectionStatusChanged.cs" />
+    <Compile Include="MNetListener.cs" />
+    <Compile Include="MNetMessagePrefix.cs" />
     <Compile Include="MNetMessageType.cs" />
+    <Compile Include="MNetRawMessage.cs" />
     <Compile Include="MNetService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

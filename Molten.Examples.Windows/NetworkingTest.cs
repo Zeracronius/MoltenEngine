@@ -31,7 +31,8 @@ namespace Molten.Samples
         {
             base.OnStart(settings);
             settings.Network.Mode = NetworkMode.Server;
-            settings.Network.ListeningAddress.Value = "127.0.0.1";
+            settings.Network.ListeningAddress.Value = System.Net.IPAddress.IPv6Loopback.ToString();
+            settings.Network.Apply();
         }
 
         protected override void OnInitialize(Engine engine)
@@ -41,14 +42,15 @@ namespace Molten.Samples
             EngineSettings clientSettings = new EngineSettings();
             clientSettings.Network.Mode = NetworkMode.Client;
             clientSettings.Network.Port.Value = 6114;
-            clientSettings.Network.ListeningAddress.Value = "127.0.0.1";
+            clientSettings.Network.ListeningAddress.Value = System.Net.IPAddress.IPv6Loopback.ToString();
+            clientSettings.Network.Apply();
 
             _clientThreadManager = new Threading.ThreadManager(Log);
             _client = new MNetService();
             _client.Identity = Net.Identity;
             _client.Initialize(clientSettings, Log);
             _client.Start(_clientThreadManager, Log);
-            _serverConnection = _client.Connect(System.Net.IPAddress.Loopback.ToString(), Settings.Network.Port, Encoding.UTF8.GetBytes("Hail!"));
+            _serverConnection = _client.Connect(System.Net.IPAddress.IPv6Loopback.ToString(), Settings.Network.Port, Encoding.UTF8.GetBytes("Hail!"));
         }
 
         protected override void OnUpdate(Timing time)

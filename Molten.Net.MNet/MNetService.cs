@@ -15,59 +15,23 @@ namespace Molten.Net.MNet
     public class MNetService : NetworkService
     {
         private List<MNetConnection> _connections;
-        private Socket _tcpListener;
-        private Socket _udpListener;
-        private ThreadedQueue<byte[]> _buffers;
-        private EndPoint _localEndPoint;
-
-        private Thread _tcpListeningThread;
-        private Thread _udpListeningThread;
-
         private DataWriter _dataWriter;
+        private MNetListener _listener;
 
-        private struct MessagePrefix
-        {
-            internal int Channel { get; }
-            internal MNetMessageType Type { get; }
-            internal uint SequenceNumber { get; }
-            internal DeliveryMethod DeliveryMethod { get; }
-
-            public MessagePrefix(int channel, MNetMessageType type, DeliveryMethod deliveryMethod, uint sequenceNumber)
-            {
-                Channel = channel;
-                Type = type;
-                SequenceNumber = sequenceNumber;
-                DeliveryMethod = deliveryMethod;
-            }
-        }
-        private static int MessagePrefixSize = System.Runtime.InteropServices.Marshal.SizeOf<MessagePrefix>();
 
         public MNetService()
         {
             _connections = new List<MNetConnection>();
-
-            _tcpListener = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            _udpListener = new Socket(SocketType.Dgram, ProtocolType.Udp);
-            _buffers = new ThreadedQueue<byte[]>();
             _dataWriter = new DataWriter();
+            _listener = new MNetListener();
         }
 
         protected override void OnInitialize(EngineSettings settings, Logger log)
         {
             base.OnInitialize(settings, log);
 
-            IPAddress localAddress = new IPAddress(settings.Network.ListeningAddress.Value.Split('.').Select(x => byte.Parse(x)).ToArray());
-            _localEndPoint = new IPEndPoint(localAddress, settings.Network.Port.Value);
-
-            _udpListener.Bind(new IPEndPoint(IPAddress.Any, settings.Network.Port.Value));
-            _tcpListener.Bind(_localEndPoint);
-            _tcpListener.Listen(100);
-
-            _udpListeningThread = new Thread(ListenUDP);
-            _udpListeningThread.Start();
-
-            _tcpListeningThread = new Thread(ListenTCP);
-            _tcpListeningThread.Start();
+            IPAddress localAddress = IPAddress.Parse(settings.Network.ListeningAddress);
+            _listener.Initialize(localAddress, settings.Network.Port);
         }
 
         public override INetworkConnection Connect(string host, int port, byte[] data = null)
@@ -77,7 +41,7 @@ namespace Molten.Net.MNet
             _connections.Add(connection);
 
             _dataWriter.Clear();
-            _dataWriter.Write(new MessagePrefix((_localEndPoint as IPEndPoint).Port, MNetMessageType.ConnectionRequest, DeliveryMethod.ReliableOrdered, 0));
+            _dataWriter.Write(new MessagePrefix(_listener.Port, MNetMessageType.ConnectionRequest, DeliveryMethod.ReliableOrdered, 0));
             if (data != null)
                 _dataWriter.Write(data);
 
@@ -95,189 +59,122 @@ namespace Molten.Net.MNet
             // Handle outgoing.
             while (_outbox.TryDequeue(out (INetworkMessage, INetworkConnection[]) message))
                 Send(message.Item1, message.Item2?.Cast<MNetConnection>() ?? _connections);
+
+            ProcessRecieved();
         }
 
-        private void ListenTCP()
+        private void ProcessRecieved()
         {
-            while(true)
+            while (_listener.Inbox.TryDequeue(out MNetRawMessage rawMessage))
             {
-                using (Socket connection = _tcpListener.Accept())
+                // Process new messages based on transmission method.
+
+                // Identify existing source connection.
+                MNetConnection sourceConnection = _connections.FirstOrDefault(x =>
                 {
-                    EndPoint remoteEndpoint = connection.RemoteEndPoint;
+                    // Compare directly if possible
+                    if (x.Endpoint.Address.Equals(rawMessage.Address))
+                        return true;
 
-                    Queue<byte[]> filled = new Queue<byte[]>();
-                    int bytesRecieved = 0;
-                    int totalBytes = 0;
-                    byte[] buffer;
-                    do
+                    // If client connection is IPv6 then compare using that.
+                    if (x.Endpoint.Address.AddressFamily == AddressFamily.InterNetworkV6)
+                        return x.Endpoint.Address.Equals(rawMessage.Address.MapToIPv6());
+                    
+                    // Default to IPv4
+                    return x.Endpoint.Address.Equals(rawMessage.Address.MapToIPv4());
+                });
+
+
+                if (sourceConnection != null)
+                {
+                    sourceConnection.InboundChannels.TryGetValue(rawMessage.Prefix.Channel, out uint currentPacketId);
+
+                    switch (rawMessage.Prefix.DeliveryMethod)
                     {
-                        if (_buffers.TryDequeue(out buffer) == false)
-                            buffer = new byte[1024];
+                        case DeliveryMethod.Unreliable:
+                            // Prevent duplicates
 
-                        bytesRecieved = connection.Receive(buffer, 0, buffer.Length, SocketFlags.None);
-                        if (bytesRecieved == 0)
                             break;
 
-                        totalBytes += bytesRecieved;
-                        filled.Enqueue(buffer);
+                        case DeliveryMethod.UnreliableSequenced:
+                            // Drop if old
+                            if (rawMessage.Prefix.PacketId <= currentPacketId)
+                                continue;
 
-                        if (bytesRecieved < buffer.Length)
-                            break;
-                    }
-                    while (buffer[bytesRecieved] != 0x1A);
-
-                    connection.Disconnect(true);
-
-                    int prefix = MessagePrefixSize;
-                    byte[] data = new byte[totalBytes - prefix];
-                    int position = 0;
-                    MessagePrefix messagePrefix = new MessagePrefix();
-                    while (filled.Count > 0)
-                    {
-                        byte[] usedBuffer = filled.Dequeue();
-                        int remainingBytes = Math.Min(totalBytes - prefix - position, 1024);
-
-                        Array.Copy(buffer, prefix, data, position, remainingBytes);
-                        position += usedBuffer.Length;
-
-                        // Read prefix
-                        if (prefix > 0)
-                        {
-                            unsafe
-                            {
-                                MessagePrefix* prefixPointer = &messagePrefix;
-                                fixed (byte* bufferPointer = buffer)
-                                    Buffer.MemoryCopy(bufferPointer, prefixPointer, MessagePrefixSize, MessagePrefixSize);
-                            }
-                            prefix = 0;
-                        }
-
-                        _buffers.Enqueue(buffer);
-                    }
-
-                    IPEndPoint remoteIP = connection.RemoteEndPoint as IPEndPoint;
-                    MNetConnection mnetConnection = _connections.FirstOrDefault(x => x.Endpoint.Address.Equals(remoteIP.Address.MapToIPv4()));
-                    INetworkMessage message = null;
-                    switch (messagePrefix.Type)
-                    {
-                        case MNetMessageType.ConnectionRequest:
-                            MNetConnection newConnection = new MNetConnection(remoteIP.Address.MapToIPv4(), messagePrefix.Channel);
-                            message = new MNetConnectionRequest(data, messagePrefix.DeliveryMethod, 0, newConnection, this);
                             break;
 
-                        case MNetMessageType.ConnectionApproved:
-                            Log.Write("Connection approved.");
-                            if (mnetConnection != null)
-                                mnetConnection.Status = ConnectionStatus.Connected;
+                        case DeliveryMethod.ReliableUnordered:
+                            // Reliable UDP??
 
-                            message = new MNetConnectionStatusChanged(mnetConnection, ConnectionStatus.Connected, data, messagePrefix.DeliveryMethod, 0);
                             break;
 
-                        case MNetMessageType.ConnectionRejected:
-                            Log.Write("Connection rejected: " + Encoding.UTF8.GetString(data));
-                            if (mnetConnection != null)
-                                mnetConnection.Status = ConnectionStatus.Disconnected;
-                            _connections.Remove(mnetConnection);
+                        case DeliveryMethod.ReliableSequenced:
+                            // Reliable drop if old
 
-                            message = new MNetConnectionStatusChanged(mnetConnection, ConnectionStatus.Disconnected, data, messagePrefix.DeliveryMethod, 0);
                             break;
 
-                        case MNetMessageType.Data:
-                            message = new NetworkMessage(data, messagePrefix.DeliveryMethod, 0);
+                        case DeliveryMethod.ReliableOrdered:
+                            // Currently TCP
+
                             break;
 
-                        //case MNetMessageType.ErrorMessage:
-                        //    break;
 
-                        case MNetMessageType.Unknown:
+                        case DeliveryMethod.Unknown:
                         default:
-                            throw new NotImplementedException();
+                            break;
                     }
 
-                    HandleSequence(mnetConnection, messagePrefix, message);
+                    if (currentPacketId < rawMessage.Prefix.PacketId)
+                        sourceConnection.InboundChannels[rawMessage.Prefix.Channel] = rawMessage.Prefix.PacketId;
                 }
-            }
-        }
-
-        private void ListenUDP()
-        {
-            while (true)
-            {
-                byte[] buffer;
-                if (_buffers.TryDequeue(out buffer) == false)
-                    buffer = new byte[1024];
-
-                EndPoint endpoint = new IPEndPoint(IPAddress.Any, (_localEndPoint as IPEndPoint).Port);
-                int receivedBytes = _udpListener.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref endpoint);
-
-
-                byte[] data = new byte[receivedBytes - MessagePrefixSize];
-
-                // Read prefix
-                MessagePrefix messagePrefix;
-                unsafe
-                {
-                    MessagePrefix* prefixPointer = &messagePrefix;
-                    fixed (byte* bufferPointer = buffer)
-                        Buffer.MemoryCopy(bufferPointer, prefixPointer, MessagePrefixSize, MessagePrefixSize);
-                }
-                Array.Copy(buffer, MessagePrefixSize, data, 0, data.Length);
-
-                _buffers.Enqueue(buffer);
 
                 INetworkMessage message;
-                switch (messagePrefix.Type)
+                switch (rawMessage.Prefix.Type)
                 {
-                    case MNetMessageType.Data:
-                        message = new NetworkMessage(data, messagePrefix.DeliveryMethod, messagePrefix.Channel);
+                    case MNetMessageType.ConnectionRequest:
+                        MNetConnection newConnection = new MNetConnection(rawMessage.Address, rawMessage.Prefix.Channel);
+                        message = new MNetConnectionRequest(rawMessage.Data, rawMessage.Prefix.DeliveryMethod, 0, newConnection, this);
                         break;
 
+                    case MNetMessageType.ConnectionApproved:
+                        if (sourceConnection == null)
+                            throw new InvalidOperationException("Approved a non-existing connection.");
+
+                        Log.Write("[Network] Connection approved: " + sourceConnection.ToString());
+                        sourceConnection.Status = ConnectionStatus.Connected;
+
+                        message = new MNetConnectionStatusChanged(sourceConnection, ConnectionStatus.Connected, rawMessage.Data, rawMessage.Prefix.DeliveryMethod, 0);
+                        break;
+
+                    case MNetMessageType.ConnectionRejected:
+                        if (sourceConnection == null)
+                            throw new InvalidOperationException("Rejected a non-existing connection.");
+
+                        Log.Write("[Network] Connection rejected: " + sourceConnection.ToString());
+                        sourceConnection.Status = ConnectionStatus.Disconnected;
+                        _connections.Remove(sourceConnection);
+
+                        message = new MNetConnectionStatusChanged(sourceConnection, ConnectionStatus.Disconnected, rawMessage.Data, rawMessage.Prefix.DeliveryMethod, 0);
+                        break;
+
+                    case MNetMessageType.Data:
+                        message = new NetworkMessage(rawMessage.Data, rawMessage.Prefix.PacketId, rawMessage.Prefix.DeliveryMethod, 0, sourceConnection);
+                        break;
+
+                    //case MNetMessageType.ErrorMessage:
+                    //    break;
+
+                    case MNetMessageType.Unknown:
                     default:
                         throw new NotImplementedException();
                 }
 
-                IPEndPoint remoteIP = endpoint as IPEndPoint;
-                MNetConnection mnetConnection = _connections.FirstOrDefault(x => x.Endpoint.Address.Equals(remoteIP.Address.MapToIPv4()));
-                HandleSequence(mnetConnection, messagePrefix, message);
+
+                if (message != null)
+                    _inbox.Enqueue(message);
             }
         }
 
-
-        private void HandleSequence(MNetConnection mnetConnection, MessagePrefix messagePrefix, INetworkMessage message)
-        {
-            if (mnetConnection != null)
-            {
-                mnetConnection.InboundSequenceNumbers.TryGetValue(message.Channel, out uint currentSequenceNumber);
-
-                switch (message.DeliveryMethod)
-                {
-                    case DeliveryMethod.UnreliableSequenced:
-                    case DeliveryMethod.ReliableSequenced:
-                        // If message sequence number is older (smaller) than the current sequence number, then drop message.
-                        if (messagePrefix.SequenceNumber < currentSequenceNumber)
-                            message = null;
-                        break;
-
-                    case DeliveryMethod.ReliableUnordered:
-                        break;
-
-                    case DeliveryMethod.ReliableOrdered:
-                        // TCP
-                        break;
-
-                    case DeliveryMethod.Unknown:
-                    case DeliveryMethod.Unreliable:
-                    default:
-                        break;
-                }
-
-                if (currentSequenceNumber < messagePrefix.SequenceNumber)
-                    mnetConnection.InboundSequenceNumbers[message.Channel] = messagePrefix.SequenceNumber;
-            }
-
-            if (message != null)
-                _inbox.Enqueue(message);
-        }
 
         public void Send(INetworkMessage message, IEnumerable<MNetConnection> connections)
         {
@@ -287,7 +184,7 @@ namespace Molten.Net.MNet
                     return;
 
                 _dataWriter.Clear();
-                _dataWriter.Write(new MessagePrefix(message.Channel, MNetMessageType.Data, message.DeliveryMethod, connection.GetOutboundSequenceNumber(message.Channel)));
+                _dataWriter.Write(new MessagePrefix(message.Channel, MNetMessageType.Data, message.DeliveryMethod, connection.GetOutboundPacketId(message.Channel)));
                 _dataWriter.Write(message.Data);
 
                 switch (message.DeliveryMethod)
@@ -393,8 +290,7 @@ namespace Molten.Net.MNet
 
         protected override void OnDispose()
         {
-            _tcpListeningThread.Abort();
-            _udpListeningThread.Abort();
+            _listener.Dispose();
             base.OnDispose();
         }
     }
