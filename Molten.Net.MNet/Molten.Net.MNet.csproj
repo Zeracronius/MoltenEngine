@@ -64,6 +64,8 @@
     <Compile Include="MNetRawMessage.cs" />
     <Compile Include="MNetService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tasks\IMessageReadTask.cs" />
+    <Compile Include="Tasks\ReadTcpTask.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Molten.IO\Molten.IO.csproj">

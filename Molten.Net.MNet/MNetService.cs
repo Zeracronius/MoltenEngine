@@ -24,14 +24,14 @@ namespace Molten.Net.MNet
             _connections = new List<MNetConnection>();
             _dataWriter = new DataWriter();
             _listener = new MNetListener();
+
+            OnStarted += MNetService_OnStarted;
         }
 
-        protected override void OnInitialize(EngineSettings settings, Logger log)
+        private void MNetService_OnStarted(EngineService o)
         {
-            base.OnInitialize(settings, log);
-
-            IPAddress localAddress = IPAddress.Parse(settings.Network.ListeningAddress);
-            _listener.Initialize(localAddress, settings.Network.Port);
+            IPAddress localAddress = IPAddress.Parse(Settings.Network.ListeningAddress);
+            _listener.Initialize(Thread.Manager, localAddress, Settings.Network.Port);
         }
 
         public override INetworkConnection Connect(string host, int port, byte[] data = null)
@@ -39,7 +39,7 @@ namespace Molten.Net.MNet
             MNetConnection connection = new MNetConnection(host, port);
             connection.Status = ConnectionStatus.InitiatedConnect;
             _connections.Add(connection);
-
+            
             _dataWriter.Clear();
             _dataWriter.Write(new MessagePrefix(_listener.Port, MNetMessageType.ConnectionRequest, DeliveryMethod.ReliableOrdered, 0));
             if (data != null)

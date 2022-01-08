@@ -1,5 +1,6 @@
 ﻿using Molten.Collections;
 using Molten.Net.Message;
+using Molten.Threading;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,8 @@ namespace Molten.Net.MNet
 {
     internal class MNetListener : IDisposable
     {
+        public string Identity { get; private set; }
+
         public int Port { get; private set; }
         public IPAddress LocalAddress { get; private set; }
         public ThreadedQueue<MNetRawMessage> Inbox { get; }
@@ -20,9 +23,13 @@ namespace Molten.Net.MNet
         private Socket _tcpListener;
         private Socket _udpListener;
 
+        private EndPoint _udpEndpoint;
+
         private ThreadedQueue<byte[]> _buffers;
-        private Thread _tcpListeningThread;
-        private Thread _udpListeningThread;
+        private EngineThread _tcpListeningThread;
+        private EngineThread _udpListeningThread;
+
+        private WorkerGroup _workerGroup;
 
         public MNetListener()
         {
@@ -30,13 +37,22 @@ namespace Molten.Net.MNet
             _udpListener = new Socket(SocketType.Dgram, ProtocolType.Udp);
             _buffers = new ThreadedQueue<byte[]>();
 
+            // Allow UDP from any source.
+            _udpEndpoint = new IPEndPoint(IPAddress.Any, Port);
+
+            _tcpListener.Blocking = false;
+
             Inbox = new ThreadedQueue<MNetRawMessage>();
         }
 
-        public void Initialize(IPAddress localAddress, int port)
+        public void Initialize(ThreadManager threading, IPAddress localAddress, int port)
         {
+            Identity = $"{localAddress}:{port}_Listener";
             LocalAddress = localAddress;
             Port = port;
+
+
+            _workerGroup = threading.SpawnWorkerGroup(Identity + "_Worker", 10);
 
             IPEndPoint localEndPoint = new IPEndPoint(localAddress, port);
             _udpListener.Bind(localEndPoint);
@@ -44,114 +60,63 @@ namespace Molten.Net.MNet
 
             _tcpListener.Listen(100);
 
-            _udpListeningThread = new Thread(ListenUDP);
-            _udpListeningThread.Start();
-
-            _tcpListeningThread = new Thread(ListenTCP);
-            _tcpListeningThread.Start();
+            _udpListeningThread = threading.SpawnThread($"{Identity}_Listener_UDP", true, false, ListenUDP);
+            _tcpListeningThread = threading.SpawnThread($"{Identity}_Listener_TCP", true, false, ListenTCP);
         }
 
-        private void ListenTCP()
+        private void ListenTCP(Timing timing)
         {
-            while (true)
+            while(_tcpListener.Poll(10, SelectMode.SelectRead))
             {
-                using (Socket connection = _tcpListener.Accept())
-                {
-                    EndPoint remoteEndpoint = connection.RemoteEndPoint;
+              Socket connection = _tcpListener.Accept();
 
-                    Queue<byte[]> filled = new Queue<byte[]>();
-                    int bytesRecieved = 0;
-                    int totalBytes = 0;
-                    byte[] buffer;
-                    do
-                    {
-                        if (_buffers.TryDequeue(out buffer) == false)
-                            buffer = new byte[1024];
-
-                        bytesRecieved = connection.Receive(buffer, 0, buffer.Length, SocketFlags.None);
-                        if (bytesRecieved == 0)
-                            break;
-
-                        totalBytes += bytesRecieved;
-                        filled.Enqueue(buffer);
-
-                        if (bytesRecieved < buffer.Length)
-                            break;
-                    }
-                    while (buffer[bytesRecieved] != 0x1A);
-
-                    connection.Disconnect(true);
-
-                    int prefix = MessagePrefix.Size;
-                    byte[] data = new byte[totalBytes - prefix];
-                    int position = 0;
-                    MessagePrefix messagePrefix = new MessagePrefix();
-                    while (filled.Count > 0)
-                    {
-                        byte[] usedBuffer = filled.Dequeue();
-                        int remainingBytes = Math.Min(totalBytes - prefix - position, 1024);
-
-                        Array.Copy(buffer, prefix, data, position, remainingBytes);
-                        position += usedBuffer.Length;
-
-                        // Read prefix
-                        if (prefix > 0)
-                        {
-                            unsafe
-                            {
-                                MessagePrefix* prefixPointer = &messagePrefix;
-                                fixed (byte* bufferPointer = buffer)
-                                    Buffer.MemoryCopy(bufferPointer, prefixPointer, MessagePrefix.Size, MessagePrefix.Size);
-                            }
-                            prefix = 0;
-                        }
-
-                        _buffers.Enqueue(buffer);
-                    }
-
-                    IPEndPoint remoteIP = connection.RemoteEndPoint as IPEndPoint;
-                    MNetRawMessage rawMessage = new MNetRawMessage(messagePrefix, data, remoteIP.Address);
-                    Inbox.Enqueue(rawMessage);
-                }
+              IWorkerTask task = Tasks.ReadTcpTask.Get(_buffers, connection);
+              task.OnCompleted += MessageTask_OnCompleted;
+              _workerGroup.QueueTask(task);
             }
         }
 
-        private void ListenUDP()
+        private void MessageTask_OnCompleted(IWorkerTask task)
         {
-            while (true)
+            Tasks.IMessageReadTask messageTask = (Tasks.IMessageReadTask)task;
+            if (messageTask.Message.HasValue)
+                Inbox.Enqueue(messageTask.Message.Value);
+
+            task.OnCompleted -= MessageTask_OnCompleted;
+        }
+
+        private void ListenUDP(Timing timing)
+        {
+            byte[] buffer;
+            if (_buffers.TryDequeue(out buffer) == false)
+                buffer = new byte[1024];
+
+            int receivedBytes = _udpListener.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref _udpEndpoint);
+
+
+            byte[] data = new byte[receivedBytes - MessagePrefix.Size];
+
+            // Read prefix
+            MessagePrefix messagePrefix;
+            unsafe
             {
-                byte[] buffer;
-                if (_buffers.TryDequeue(out buffer) == false)
-                    buffer = new byte[1024];
-
-                EndPoint endpoint = new IPEndPoint(IPAddress.Any, Port);
-                int receivedBytes = _udpListener.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref endpoint);
-
-
-                byte[] data = new byte[receivedBytes - MessagePrefix.Size];
-
-                // Read prefix
-                MessagePrefix messagePrefix;
-                unsafe
-                {
-                    MessagePrefix* prefixPointer = &messagePrefix;
-                    fixed (byte* bufferPointer = buffer)
-                        Buffer.MemoryCopy(bufferPointer, prefixPointer, MessagePrefix.Size, MessagePrefix.Size);
-                }
-                Array.Copy(buffer, MessagePrefix.Size, data, 0, data.Length);
-
-                _buffers.Enqueue(buffer);
-
-                IPEndPoint remoteIP = endpoint as IPEndPoint;
-                MNetRawMessage rawMessage = new MNetRawMessage(messagePrefix, data, remoteIP.Address);
-                Inbox.Enqueue(rawMessage);
+                MessagePrefix* prefixPointer = &messagePrefix;
+                fixed (byte* bufferPointer = buffer)
+                    Buffer.MemoryCopy(bufferPointer, prefixPointer, MessagePrefix.Size, MessagePrefix.Size);
             }
+            Array.Copy(buffer, MessagePrefix.Size, data, 0, data.Length);
+
+            _buffers.Enqueue(buffer);
+
+            IPEndPoint remoteIP = (IPEndPoint)_udpEndpoint;
+            MNetRawMessage rawMessage = new MNetRawMessage(messagePrefix, data, remoteIP.Address);
+            Inbox.Enqueue(rawMessage);
         }
 
         public void Dispose()
         {
-            _tcpListeningThread.Abort();
-            _udpListeningThread.Abort();
+            _tcpListeningThread.DisposeAndJoin();
+            _udpListeningThread.DisposeAndJoin();
         }
     }
 }
