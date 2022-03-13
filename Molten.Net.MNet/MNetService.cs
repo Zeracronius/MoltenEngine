@@ -236,7 +236,7 @@ namespace Molten.Net.MNet
             };
             e.Completed += TCPConnectionDisconnected;
             connection.TCPSocket.DisconnectAsync(e);
-            Log.WriteDebugLine($"[MNet][TCP] Sent {sentBytes} bytes to {connection.Host}");
+            Log.Debug($"[MNet][TCP] Sent {sentBytes} bytes to {connection.Host}");
         }
 
         private void TCPConnectionDisconnected(object sender, SocketAsyncEventArgs e)
@@ -264,7 +264,7 @@ namespace Molten.Net.MNet
         {
             MNetConnection connection = result.AsyncState as MNetConnection;
             int sentBytes = connection.UDPSocket.EndSendTo(result);
-            Log.WriteDebugLine($"[MNet][UDP] Sent {sentBytes} bytes to {connection.Host}");
+            Log.Debug($"[MNet][UDP] Sent {sentBytes} bytes to {connection.Host}");
             connection.UDPWaitHandle.Set();
         }
 

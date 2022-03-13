@@ -32,7 +32,7 @@ namespace Molten
             _pendingChanges = new ThreadedQueue<SceneChange>();
 
             _defaultLayer = AddLayer("default");
-            engine.Log.WriteLine($"Created scene '{name}'");
+            engine.Log.Log($"Created scene '{name}'");
         }
 
         /// <summary>
@@ -212,8 +212,7 @@ namespace Molten
         {
             Engine.RemoveScene(this);
             Engine.Renderer?.DestroyRenderData(RenderData);
-            Engine.Log.WriteLine($"Destroyed scene '{Name}'");
-            base.OnDispose();
+            Engine.Log.Log($"Destroyed scene '{Name}'");
         }
 
         /// <summary>Gets or sets whether or not the scene is updated.</summary>
@@ -229,9 +228,6 @@ namespace Molten
                     RenderData.IsVisible = value;
             }
         }
-
-        /// <summary>Gets the name of the scene.</summary>
-        public string Name { get; private set; }
 
         /// <summary>Gets the <see cref="Engine"/> instance that the <see cref="Scene"/> is bound to.</summary>
         public Engine Engine { get; private set; }

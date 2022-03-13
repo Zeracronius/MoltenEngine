@@ -2,6 +2,7 @@
 using Molten.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -46,7 +47,7 @@ namespace Molten.Samples
             _cam2D.OutputSurface = Window;
             _cam2D.LayerMask = BitwiseHelper.Set(_cam2D.LayerMask, 0);
 
-            if (engine.Input != null && engine.Input.State == EngineServiceState.Initialized)
+            if (engine.Input != null && engine.Input.State == EngineServiceState.Ready)
                 Engine.Input.Camera = _cam2D;
 
             ContentRequest cr = engine.Content.BeginRequest("assets/");
@@ -154,6 +155,7 @@ namespace Molten.Samples
                         Engine.Renderer.Overlay.Current = 0;
                         _cam2D.Flags |= RenderCameraFlags.ShowOverlay;
                     }
+                    Debug.WriteLine($"Overlay toggled with F1 -- Frame ID: {time.FrameID}");
                 }
             }
         }

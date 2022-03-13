@@ -52,7 +52,7 @@ namespace Molten.Net.MNet
             Port = port;
 
 
-            _workerGroup = threading.SpawnWorkerGroup(Identity + "_Worker", 10);
+            _workerGroup = threading.CreateWorkerGroup(Identity + "_Worker", 10);
 
             IPEndPoint localEndPoint = new IPEndPoint(localAddress, port);
             _udpListener.Bind(localEndPoint);
@@ -60,8 +60,8 @@ namespace Molten.Net.MNet
 
             _tcpListener.Listen(100);
 
-            _udpListeningThread = threading.SpawnThread($"{Identity}_Listener_UDP", true, false, ListenUDP);
-            _tcpListeningThread = threading.SpawnThread($"{Identity}_Listener_TCP", true, false, ListenTCP);
+            _udpListeningThread = threading.CreateThread($"{Identity}_Listener_UDP", true, false, ListenUDP);
+            _tcpListeningThread = threading.CreateThread($"{Identity}_Listener_TCP", true, false, ListenTCP);
         }
 
         private void ListenTCP(Timing timing)
@@ -70,15 +70,15 @@ namespace Molten.Net.MNet
             {
               Socket connection = _tcpListener.Accept();
 
-              IWorkerTask task = Tasks.ReadTcpTask.Get(_buffers, connection);
+              WorkerTask task = Tasks.ReadTcpTask.Get(_buffers, connection);
               task.OnCompleted += MessageTask_OnCompleted;
               _workerGroup.QueueTask(task);
             }
         }
 
-        private void MessageTask_OnCompleted(IWorkerTask task)
+        private void MessageTask_OnCompleted(WorkerTask task)
         {
-            Tasks.IMessageReadTask messageTask = (Tasks.IMessageReadTask)task;
+            Tasks.MessageReadTask messageTask = (Tasks.MessageReadTask)task;
             if (messageTask.Message.HasValue)
                 Inbox.Enqueue(messageTask.Message.Value);
 

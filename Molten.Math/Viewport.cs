@@ -26,7 +26,7 @@ using System.Runtime.InteropServices;
 namespace Molten
 {
     /// <summary>
-    /// Defines the viewport dimensions.
+    /// Defines viewport dimensions using signed integer dimensions.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct Viewport : IEquatable<Viewport>

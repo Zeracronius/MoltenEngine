@@ -1,4 +1,6 @@
-﻿namespace Molten.Font
+﻿using Molten.IO;
+
+namespace Molten.Font
 {
     /// <summary>CFF — Compact Font Format table.<para/>
     /// See: http://wwwimages.adobe.com/www.adobe.com/content/dam/acom/en/devnet/font/pdfs/5176.CFF.pdf </summary>
@@ -40,7 +42,7 @@
             }
             else
             {
-                log.WriteDebugLine($"[CFF] Unsupported CFF version {MajorVersion}.{MinorVersion}");
+                log.Debug($"[CFF] Unsupported CFF version {MajorVersion}.{MinorVersion}");
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using Molten.IO;
 
 namespace Molten.Font
 {
@@ -120,7 +121,7 @@ namespace Molten.Font
                     break;
 
                 default:
-                    log.WriteDebugLine($"[GSUB] unsupported SingleSubTable format {Format}");
+                    log.Debug($"[GSUB] unsupported SingleSubTable format {Format}");
                     break;
             }
 
@@ -159,7 +160,7 @@ namespace Molten.Font
                     break;
 
                 default:
-                    log.WriteWarning("Unsupported MultipleSubstitutionTable format");
+                    log.Warning("Unsupported MultipleSubstitutionTable format");
                     break;
             }
         }
@@ -197,7 +198,7 @@ namespace Molten.Font
                     break;
 
                 default:
-                    log.WriteDebugLine($"[GSUB] unsupported AlternateSubTable format {Format}");
+                    log.Debug($"[GSUB] unsupported AlternateSubTable format {Format}");
                     break;
             }
         }
@@ -229,7 +230,7 @@ namespace Molten.Font
                     break;
 
                 default:
-                    log.WriteDebugLine($"[GSUB] unsupported LigatureSubTable format {Format}");
+                    log.Debug($"[GSUB] unsupported LigatureSubTable format {Format}");
                     break;
             }
         }
@@ -318,7 +319,7 @@ namespace Molten.Font
                     break;
 
                 default:
-                    log.WriteDebugLine($"[GSUB] unsupported ContextualSubTable format {Format}");
+                    log.Debug($"[GSUB] unsupported ContextualSubTable format {Format}");
                     break;
             }
         }
@@ -421,7 +422,7 @@ namespace Molten.Font
                     break;
 
                 default:
-                    log.WriteDebugLine($"[GSUB] unsupported ChainingContextualSubTable format {Format}");
+                    log.Debug($"[GSUB] unsupported ChainingContextualSubTable format {Format}");
                     break;
             }
         }
@@ -469,7 +470,7 @@ namespace Molten.Font
                     break;
 
                 default:
-                    log.WriteDebugLine($"[GSUB] unsupported ReverseChainingContextualSingleSubTable format {Format}");
+                    log.Debug($"[GSUB] unsupported ReverseChainingContextualSingleSubTable format {Format}");
                     break;
             }
         }

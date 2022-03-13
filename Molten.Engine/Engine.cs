@@ -40,8 +40,8 @@ namespace Molten
                 Settings.Load();
 
             Log = Logger.Get();
-            Log.AddOutput(new LogFileWriter("engine_log{0}.txt"));
-            Log.WriteDebugLine("Engine Instantiated");
+            Log.AddOutput(new LogFileWriter("engine_log.txt"));
+            Log.Debug("Engine Instantiated");
             Threading = new ThreadManager(Log);
             _taskQueue = new ThreadedQueue<EngineTask>();
             _services = new List<EngineService>(Settings.StartupServices);
@@ -56,13 +56,7 @@ namespace Molten
                 Renderer.OnStarted += Renderer_OnStarted;
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-        }
 
-        /// <summary>
-        /// Initializes (but doesn't start) the engine and it's bound servics.
-        /// </summary>
-        public void Initialize()
-        {
             foreach (EngineService service in _services)
                 service.Initialize(Settings, Log);
         }
@@ -74,7 +68,7 @@ namespace Molten
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            Log.WriteError(e.ExceptionObject as Exception);
+            Log.Error(e.ExceptionObject as Exception);
             Logger.DisposeAll();
         }
 
@@ -120,7 +114,7 @@ namespace Molten
                 Type serviceType = service.GetType();
                 if (type.IsAssignableFrom(serviceType))
                     return service.State == EngineServiceState.Running || 
-                        service.State == EngineServiceState.Initialized;
+                        service.State == EngineServiceState.Ready;
             }
 
             return false;
@@ -139,8 +133,8 @@ namespace Molten
             catch (Exception e)
             {
                 // TODO Use the fallback font provided with the engine.
-                Log.WriteError("Failed to load default font.");
-                Log.WriteError(e);
+                Log.Error("Failed to load default font.");
+                Log.Error(e);
                 throw e;
             }
         }
@@ -153,7 +147,9 @@ namespace Molten
             foreach (EngineService service in _services)
                 service.Start(Threading, Log);
 
-            _mainThread = Threading.SpawnThread("engine", true, true, (timing) =>
+            Content.Workers.IsPaused = false;
+
+            _mainThread = Threading.CreateThread("engine", true, true, (timing) =>
             {
                 Update(timing);
                 updateCallback(timing);
@@ -165,14 +161,14 @@ namespace Molten
         /// </summary>
         public void Stop()
         {
-            _mainThread.Dispose();
+            _mainThread?.Dispose();
 
             foreach (EngineService service in _services)
             {
                 service.Stop();
 
                 // Wait for the service thread to stop.
-                while (service.State != EngineServiceState.Initialized)
+                while (service.State != EngineServiceState.Ready)
                 {
                     if (service.Thread != null)
                     {
@@ -200,8 +196,7 @@ namespace Molten
 
         private void Update(Timing time)
         {
-            EngineTask task = null;
-            while (_taskQueue.TryDequeue(out task))
+            while (_taskQueue.TryDequeue(out EngineTask task))
                 task.Process(this, time);
 
             // Update services that are set to run on the main engine thread.
@@ -222,7 +217,7 @@ namespace Molten
             if (IsDisposed)
                 return;
 
-            Log.WriteDebugLine("Disposing of engine");
+            Log.Debug("Disposing of engine");
 
             Stop();
 

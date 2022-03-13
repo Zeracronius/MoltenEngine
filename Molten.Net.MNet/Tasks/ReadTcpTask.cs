@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Molten.Net.MNet.Tasks
 {
-    internal class ReadTcpTask : IMessageReadTask, IPoolable
+    internal class ReadTcpTask : MessageReadTask, IPoolable
     {
         static ObjectPool<ReadTcpTask> _pool = new ObjectPool<ReadTcpTask>(() => new ReadTcpTask());
         internal static ReadTcpTask Get(ThreadedQueue<byte[]> buffers, Socket connection)
@@ -21,14 +21,12 @@ namespace Molten.Net.MNet.Tasks
             return task;
         }
 
-        public event WorkerTaskCompletedEvent OnCompleted;
-
-        private Socket _connection;
-        private ThreadedQueue<byte[]> _buffers;
+        private Socket? _connection;
+        private ThreadedQueue<byte[]>? _buffers;
 
         public MNetRawMessage? Message { get; private set; }
 
-        public void Run()
+        protected override bool OnRun()
         {
             _connection.Blocking = true;
             EndPoint remoteEndpoint = _connection.RemoteEndPoint;
@@ -87,12 +85,12 @@ namespace Molten.Net.MNet.Tasks
             IPEndPoint remoteIP = _connection.RemoteEndPoint as IPEndPoint;
             Message = new MNetRawMessage(messagePrefix, data, remoteIP.Address);
 
-            OnCompleted?.Invoke(this);
             _connection.Dispose();
             _pool.Recycle(this);
+            return true;
         }
 
-        public void Clear()
+        public void ClearForPool()
         {
             _connection = null;
             _buffers = null;

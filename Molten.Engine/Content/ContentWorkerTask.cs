@@ -3,7 +3,7 @@ using Molten.Threading;
 
 namespace Molten
 {
-    internal class ContentWorkerTask : IWorkerTask, IPoolable
+    internal class ContentWorkerTask : WorkerTask, IPoolable
     {
         static ObjectPool<ContentWorkerTask> _pool = new ObjectPool<ContentWorkerTask>(() => new ContentWorkerTask());
         internal static ContentWorkerTask Get()
@@ -14,16 +14,17 @@ namespace Molten
         public event WorkerTaskCompletedEvent OnCompleted;
         internal ContentRequest Request;
 
-        public void Clear()
+        public void ClearForPool()
         {
             Request = null;
         }
 
-        public void Run()
+        protected override bool OnRun()
         {
             Request.Manager.ProcessRequest(Request);
             OnCompleted?.Invoke(this);
             _pool.Recycle(this);
+            return true;
         }
     }
 }

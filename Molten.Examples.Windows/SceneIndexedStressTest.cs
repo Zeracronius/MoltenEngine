@@ -29,8 +29,8 @@ namespace Molten.Samples
                     source = reader.ReadToEnd();
             }
 
-            ShaderCompileResult shaders = engine.Renderer.Resources.CompileShaders(source, fn);
-            IMaterial material = shaders["material", 0] as IMaterial;
+            ShaderCompileResult shaders = engine.Renderer.Resources.CompileShaders(ref source, fn);
+            IMaterial material = shaders[ShaderClassType.Material, 0] as IMaterial;
 
             IIndexedMesh<VertexColor> mesh = Engine.Renderer.Resources.CreateIndexedMesh<VertexColor>(24, 36);
             if (material == null)

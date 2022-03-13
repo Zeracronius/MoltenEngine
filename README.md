@@ -20,28 +20,29 @@ See the following table for the per-platform support and status of each feature.
 Blank - Not Started\
 🚫 Not-applicable
 
-| Feature                | Windows    | Android  | Linux  | Mac  |
-| :---                   | :-------:  | :-----:  | :---:  | :-:  |
-| Renderer - OpenGL      | 🚧         | 🚫      | 🚧     | 🚧  |
-| Renderer - OpenES      |            |         | 🚫     | 🚫  |
-| Renderer - Vulkan      |            |          |        |      |
-| Renderer - DirectX 11  | ✔️         | 🚫       | 🚫    | 🚫   |
-| Renderer - DirectX 12  |            | 🚫       | 🚫    | 🚫   |
-| Audio - OpenAL         |            |          |        |      |
-| Audio - XAudio 2       |            | 🚫       | 🚫    | 🚫   |
-| Keyboard support       | ✔️          |          |        |      |
-| Mouse support          | ✔️          |          |        |      |
-| Touch support          |            | ✔️       |        |      |
-| Game pad support       | ✔️         |          |        |      |
-| Entity component system| ✔️         | ✔️       | ✔️     | ✔️    |
-| Example projects       | ✔️         |          |        |      |
-| Networking             | 🚧         |          |        |      |
-| 2D Physics engine      |            |          |        |      |
-| 3D Physics engine      |            |          |        |      |
-| Google Analytics       |            |          |        |      |
-| Google AdMob           |            |          |        |      |
-| Google Firebase        |            |          |        |      |
-| Tool - Content editor  |            |          |        |      |
+| Feature                    | Windows    | Android  | Linux  | Mac  |
+| :---                       | :-------:  | :-----:  | :---:  | :-:  |
+| Renderer - OpenGL          |            | 🚫       | 🚧     | 🚧   |
+| Renderer - OpenES          |            |          | 🚫     | 🚫   |
+| Renderer - Vulkan          |            |          |        |      |
+| Renderer - DirectX 11      | 🚧         | 🚫       | 🚫    | 🚫   |
+| Renderer - DirectX 12      |            | 🚫       | 🚫    | 🚫   |
+| Audio - OpenAL             |            |          |        |      |
+| Audio - XAudio 2           |            | 🚫       | 🚫    | 🚫   |
+| Keyboard support           | ✔️          |          |        |      |
+| Mouse support              | ✔️          |          |        |      |
+| Touch support              |            | ✔️       |        |      |
+| Game pad support           | ✔️         |          |        |      |
+| Entity component system    | ✔️         | ✔️       | ✔️     | ✔️    |
+| Example projects           | 🚧         |          |        |      |
+| Networking                 | 🚧         |          |        |      |
+| 2D Physics engine          |            |          |        |      |
+| 3D Physics engine          |            |          |        |      |
+| Google Analytics           |            |          |        |      |
+| Google AdMob               |            |          |        |      |
+| Google Firebase            |            |          |        |      |
+| Tool - Content editor      |            |          |        |      |
+| Tool - Scene editor        |            |          |        |      |
 
 
 # Renderer Feature Support
@@ -74,20 +75,26 @@ Blank - Not Started\
 | static skyboxes        | ✔️         |         |        |             |       |
 | real-time skyboxes     |            |         |        |             |       |
 | multi-window support   | ✔️         |         |        | 🚫          |       |
-| Render into WinForms   | ✔️         |         | 🚫    | 🚫          | 🚫    |
-| Render into WPF        |            |         | 🚫    | 🚫          | 🚫    |
+| Render into WinForms   | ✔️         |         |        | 🚫          | 🚫    |
+| Render into WPF        |            |         |        | 🚫          | 🚫    |
 | Render into UWP        |            |         | 🚫    | 🚫          | 🚫    |
-|[Render into MAUI](https://docs.microsoft.com/en-us/dotnet/maui/what-is-maui)|            |         |       |             |       |
+|[Render into MAUI](https://docs.microsoft.com/en-us/dotnet/maui/what-is-maui) |            |         |       |             |       |
 | Render into Android UI | 🚫         | 🚫      |       | 🚫          | 🚫   |
 | Raytracing             | 🚫         |         | 🚫    | 🚫          |       |
+| HLSL Shader Compiler   | 🚧		  | 🚫      | 🚫    | 🚫          | 🚫   |
+| GLSL Shader Compiler   | 🚧		  |         |        |             |      |
+| SPIR-V Shader Compiler | 🚧		  |         |        |             |      |
 
+# Android
+Molten has recently been upgraded to .NET 6. To build for Android you will need to install the Android workloads by running  
+```dotnet workload install android``` in command prompt or powershell.
 
 # Third-Party Libraries
 A special thanks to each of these great libraries, without which Molten wouldn't exist in it's current form:
-  * [SharpDX](https://github.com/sharpdx/SharpDX) - DirectX bindings for C#
+  * [Silk.NET](https://github.com/dotnet/Silk.NET) - C# Bindings for DirectX 11/12, OpenGL, Vulkan, Assimp, OpenCL, OpenAL and OpenXR
+  * [SharpDX](https://github.com/sharpdx/SharpDX) - Source for some Molten.Math types
   * [Magick.NET](https://github.com/dlemstra/Magick.NET) - Extensive image library for .NET
   * [JSON.NET](https://www.newtonsoft.com/json) - JSON serialization
-  * [OpenTK](https://opentk.net/) - OpenGL, OpenAL and input bindings for C#
 
 # Licensing
 [MIT](LICENSE) - You can do what you want with Molten. Fork it, chop it up and consume it for dinner. You get the idea!

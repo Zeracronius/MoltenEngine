@@ -3,7 +3,7 @@ using Molten.Threading;
 
 namespace Molten
 {
-    internal class ContentReloadTask : IWorkerTask, IPoolable
+    internal class ContentReloadTask : WorkerTask, IPoolable
     {
         static ObjectPool<ContentReloadTask> _pool = new ObjectPool<ContentReloadTask>(() => new ContentReloadTask());
         internal static ContentReloadTask Get()
@@ -15,16 +15,17 @@ namespace Molten
         internal ContentFile File;
         internal ContentManager Manager;
 
-        public void Clear()
+        public void ClearForPool()
         {
             File = null;
         }
 
-        public void Run()
+        protected override bool OnRun()
         {
             Manager.ReloadFile(File);
             OnCompleted?.Invoke(this);
             _pool.Recycle(this);
+            return true;
         }
     }
 }

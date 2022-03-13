@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+	<UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <RootNamespace>Molten.Graphics</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Data\**" />
+    <EmbeddedResource Remove="Data\**" />
+    <None Remove="Data\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\gbuffer.mfx" />
+    <None Remove="Assets\gbuffer_common.mfx" />
+    <None Remove="Assets\gbuffer_compose.mfx" />
+    <None Remove="Assets\light_common.mfx" />
+    <None Remove="Assets\light_point.mfx" />
+    <None Remove="Assets\skybox.mfx" />
+    <None Remove="Assets\sprite.mfx" />
+    <None Remove="Assets\sprite_common.mfx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\gbuffer.mfx" />
+    <EmbeddedResource Include="Assets\gbuffer_common.mfx" />
+    <EmbeddedResource Include="Assets\gbuffer_compose.mfx" />
+    <EmbeddedResource Include="Assets\light_common.mfx" />
+    <EmbeddedResource Include="Assets\light_point.mfx" />
+    <EmbeddedResource Include="Assets\skybox.mfx" />
+    <EmbeddedResource Include="Assets\sprite.mfx" />
+    <EmbeddedResource Include="Assets\sprite_common.mfx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Silk.NET.Core" Version="2.13.0" />
+    <PackageReference Include="Silk.NET.Direct3D.Compilers" Version="2.13.0" />
+    <PackageReference Include="Silk.NET.Direct3D11" Version="2.13.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Molten.Engine.Windows\Molten.Engine.Windows.csproj" />
+    <ProjectReference Include="..\Molten.Engine\Molten.Engine.csproj" />
+    <ProjectReference Include="..\Molten.Font\Molten.Font.csproj" />
+    <ProjectReference Include="..\Molten.Graphics.DXGI\Molten.Graphics.DXGI.csproj" />
+    <ProjectReference Include="..\Molten.Math\Molten.Math.csproj" />
+    <ProjectReference Include="..\Molten.Utility\Molten.Utility.csproj" />
+  </ItemGroup>
+
+</Project>

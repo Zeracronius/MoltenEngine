@@ -44,8 +44,8 @@ namespace Molten.Samples
             clientSettings.Network.Port.Value = 6114;
             clientSettings.Network.ListeningAddress.Value = System.Net.IPAddress.IPv6Loopback.ToString();
             clientSettings.Network.Apply();
-
-            _clientThreadManager = new Threading.ThreadManager(Log);
+            
+            _clientThreadManager = Engine.Threading;
             _client = new MNetService();
             _client.Identity = Net.Identity;
             _client.Initialize(clientSettings, Log);
@@ -60,7 +60,7 @@ namespace Molten.Samples
                 DataWriter writer = new DataWriter();
                 writer.Write<byte>(1);
                 writer.Write(1);
-                writer.WriteString("Message" + time.CurrentFrame, Encoding.UTF8);
+                writer.WriteString("Message" + time.FrameID, Encoding.UTF8);
                 writer.WriteStringRaw("In other news...", Encoding.UTF8);
                 _client.SendMessage(new NetworkMessage(writer.GetData(), DeliveryMethod.Unreliable, 0));
             }
@@ -73,7 +73,7 @@ namespace Molten.Samples
                     case ConnectionRequest connectionRequest:
                         string hailMessage = Encoding.UTF8.GetString(connectionRequest.Data);
                         connectionRequest.Approve();
-                        Log.WriteDebugLine("[Server]: Approved connection request: " + hailMessage);
+                        Log.Debug("[Server]: Approved connection request: " + hailMessage);
                         break;
 
                     case NetworkMessage message:
@@ -87,12 +87,12 @@ namespace Molten.Samples
 
 
                         //string messageContent = Encoding.ASCII.GetString(message.Data, 1, message.Data.Length - 1);
-                        Log.WriteDebugLine("[Server]: Recieved message: " + messageContent);
+                        Log.Debug("[Server]: Recieved message: " + messageContent);
                         break;
 
                     case ConnectionStatusChanged message:
                         string content = Encoding.ASCII.GetString(message.Data);
-                        Log.WriteDebugLine($"[Server][{message.Connection.Host}]: Connection status changed: " + content);
+                        Log.Debug($"[Server][{message.Connection.Host}]: Connection status changed: " + content);
                         break;
 
                     default:
@@ -131,12 +131,12 @@ namespace Molten.Samples
 
 
                         //string messageContent = Encoding.ASCII.GetString(message.Data, 1, message.Data.Length - 1);
-                        Log.WriteDebugLine("[Client]: Recieved message: " + messageContent);
+                        Log.Debug("[Client]: Recieved message: " + messageContent);
                         break;
 
                     case ConnectionStatusChanged message:
                         string content = Encoding.ASCII.GetString(message.Data);
-                        Log.WriteDebugLine($"[Client][{message.Connection.Host}]: Connection status changed: " + content);
+                        Log.Debug($"[Client][{message.Connection.Host}]: Connection status changed: " + content);
                         break;
 
                     default:

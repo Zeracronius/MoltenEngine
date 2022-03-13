@@ -11,7 +11,7 @@ namespace Molten
     public delegate void SceneObjectSceneHandler(SceneObject obj, Scene scene, SceneLayer layer);
     public delegate void SceneObjectLayerHandler(SceneObject obj, SceneLayer oldLayer, SceneLayer newLayer);
 
-    public sealed class SceneObject : IdentifiedObject
+    public sealed class SceneObject : EngineObject
     {
         Engine _engine;
         Scene _scene;
@@ -58,6 +58,8 @@ namespace Molten
             IsVisible = visible;
         }
 
+        protected override void OnDispose() { }
+
         private void _children_OnItemRemoved(SceneChildCollection collection, SceneObject item)
         {
             item.Parent = null;
@@ -92,14 +94,14 @@ namespace Molten
 
             if (baseType.IsAssignableFrom(componentType) == false)
             {
-                Engine.Log.WriteError($"Scene.AddObjectWithComponents: Attempt to add invalid component type {componentType.Name} to new object.");
+                Engine.Log.Error($"Scene.AddObjectWithComponents: Attempt to add invalid component type {componentType.Name} to new object.");
                 return null;
             }
 
             ConstructorInfo cInfo = componentType.GetConstructor(Type.EmptyTypes);
             if (cInfo == null)
             {
-                Engine.Log.WriteError($"Scene.AddObjectWithComponents: Attempted to add valid component type {componentType.Name} to new object, but no parameterless-constructor was present.");
+                Engine.Log.Error($"Scene.AddObjectWithComponents: Attempted to add valid component type {componentType.Name} to new object, but no parameterless-constructor was present.");
                 return null;
             }
             else

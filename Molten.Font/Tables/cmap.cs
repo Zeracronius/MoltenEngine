@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Molten.IO;
+using System.Collections.Generic;
 
 namespace Molten.Font
 {
@@ -89,7 +90,7 @@ namespace Molten.Font
                     case 14: Tables[i] = new CmapFormat14SubTable(reader, log, this, record.Offset, record); break;
                     default:
                         Tables[i] = new CmapNullSubTable(reader, log, this, 0, record);
-                        log.WriteDebugLine($"[CMAP] Unsupported format for sub-table {i}/{numRecords - 1}: Format {record.Format}");
+                        log.Debug($"[CMAP] Unsupported format for sub-table {i}/{numRecords - 1}: Format {record.Format}");
                         break;
                 }
             }

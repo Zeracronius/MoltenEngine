@@ -1,4 +1,6 @@
-﻿namespace Molten.Font
+﻿using Molten.IO;
+
+namespace Molten.Font
 {
     /// <summary>JSTF — Justification Table <para/>
     /// See: https://docs.microsoft.com/en-us/typography/opentype/spec/jstf </summary>
@@ -279,7 +281,7 @@
                     break;
 
                 default:
-                    log.WriteDebugLine($"[GPOS] unsupported JustificationLookupTable format {format}");
+                    log.Debug($"[GPOS] unsupported JustificationLookupTable format {format}");
                     break;
             }
 

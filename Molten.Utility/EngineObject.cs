@@ -1,49 +1,69 @@
-﻿using System;
+﻿using Molten.Utility;
+using Silk.NET.Core.Native;
+using System;
 using System.Runtime.Serialization;
 using System.Threading;
 
 namespace Molten
 {
-    public delegate void EngineObjectHandler(EngineObject obj);
-
+    /// <summary>
+    /// A helper base class for tracking and managing game objects. Provides a disposal structure and unique ID system.
+    /// </summary>
     [DataContract]
     public abstract class EngineObject : IDisposable
     {
-        bool _isDisposed;
+        [ThreadStatic]
+        static uint _idCounter;
 
-        public event EngineObjectHandler OnDisposing;
+        /// <summary>
+        /// Invoked when the current <see cref="EngineObject"/> is being disposed.
+        /// </summary>
+        public event MoltenEventHandler<EngineObject> OnDisposing;
 
-        /// <summary>Safely disposes of an object which may also be null.</summary>
-        /// <param name="disposable">The object to dispose.</param>
-        protected void DisposeObject<T>(ref T disposable) where T : IDisposable
+        /// <summary>
+        /// Creates a new instance of <see cref="EngineObject"/>.
+        /// </summary>
+        public EngineObject()
         {
-            if (disposable != null)
-            {
-                disposable.Dispose();
-                disposable = default;
-            }
+            EOID = ((ulong)Thread.CurrentThread.ManagedThreadId << 32) | _idCounter++;
+            Name = $"EO {EOID} - {this.GetType().Name}";
         }
 
-        /// <summary>Disposes of the current <see cref="EngineObject"/> instance and releases its ID to be reused by a new object.</summary>
+        public override string ToString()
+        {
+            return Name;
+        }
+
+        /// <summary>Disposes of the current <see cref="EngineObject"/> instance.</summary>
         public void Dispose()
         {
-            if (_isDisposed)
+            if (IsDisposed)
                 return;
 
-            _isDisposed = true;
+            IsDisposed = true;
             Interlocked.CompareExchange(ref OnDisposing, null, null)?.Invoke(this);
             OnDispose();
         }
 
         /// <summary>Invoked when <see cref="Dispose"/> is called.</summary>
-        protected virtual void OnDispose() { }
+        protected abstract void OnDispose();
 
         /// <summary>Gets whether or not the object has been disposed.</summary>
-        public bool IsDisposed => _isDisposed;
+        public bool IsDisposed { get; protected set; }
 
         /// <summary>
         /// Gets or sets the tag object.
         /// </summary>
         public object Tag { get; set; }
+
+        /// <summary>
+        /// Gets the unique <see cref="EngineObject"/> ID (EOID) of the current <see cref="EngineObject"/>.
+        /// </summary>
+        public ulong EOID { get; }
+
+        /// <summary>
+        /// Gets the name of the object. Multiple <see cref="EngineObject"/> can have the same name.
+        /// </summary>
+        public string Name { get; set; }
     }
 }

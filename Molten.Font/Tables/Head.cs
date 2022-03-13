@@ -1,4 +1,5 @@
 ﻿using System;
+using Molten.IO;
 
 namespace Molten.Font
 {
@@ -115,7 +116,7 @@ namespace Molten.Font
             GlyphDataFormat = reader.ReadInt16();
 
             if (MagicNumber != EXPECTED_MAGIC_NUMBER)
-                log.WriteDebugLine($"[head] Invalid magic number detected: {MagicNumber} -- Expected: {EXPECTED_MAGIC_NUMBER}");
+                log.Debug($"[head] Invalid magic number detected: {MagicNumber} -- Expected: {EXPECTED_MAGIC_NUMBER}");
         }
     }
 
