@@ -52,8 +52,9 @@ namespace Molten.Net.MNet.Tasks
                 if (bytesRecieved < buffer.Length)
                     break;
             }
-            while (buffer[bytesRecieved] != 0x1A);
-
+            while (buffer[bytesRecieved] != 0x1A && _connection.Connected);
+            
+            _connection.Shutdown(SocketShutdown.Both);
             _connection.Disconnect(true);
 
             int prefix = MessagePrefix.Size;
