@@ -24,7 +24,7 @@ namespace Molten.Samples
         {
             _player = CreateObject();
             SceneCamera = _player.AddComponent<CameraComponent>();
-            SceneCamera.LayerMask = BitwiseHelper.Set(SceneCamera.LayerMask, 1, 2);
+            SceneCamera.LayerMask = SceneLayerMask.Layer1 | SceneLayerMask.Layer2;
             SceneCamera.OutputSurface = Window;
             SceneCamera.MaxDrawDistance = 300;
             SceneCamera.OutputSurface = Window;
@@ -157,7 +157,6 @@ namespace Molten.Samples
                 pos.Y += 20; sb.DrawString(SampleFont, $"Right stick: {Gamepad.RightStick.X},{Gamepad.RightStick.Y}", pos, Color.White);
                 pos.Y += 20; sb.DrawString(SampleFont, $"Left Trigger: {Gamepad.LeftTrigger.Value}", pos, Color.White);
                 pos.Y += 20; sb.DrawString(SampleFont, $"Right Trigger: {Gamepad.RightTrigger.Value}", pos, Color.White);
-                //pos.Y += 20; sb.DrawString(SampleFont, $"Pressed Buttons: {Gamepad.PressedButtons}", pos, Color.White);
             }
             else
             {

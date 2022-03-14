@@ -51,6 +51,7 @@ namespace Molten
         }
 
         protected SettingValue<T> AddSetting<T>(string key, T defaultValue = default(T))
+            where T : struct
         {
             SettingValue<T> r = new SettingValue<T>();
             r.SetSilently(defaultValue);
@@ -61,6 +62,7 @@ namespace Molten
         }
 
         protected SettingValueList<T> AddSettingList<T>(string key)
+            where T : struct
         {
             SettingValueList<T> r = new SettingValueList<T>();
 
