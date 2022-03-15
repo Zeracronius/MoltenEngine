@@ -9,6 +9,6 @@ namespace Molten.Net.MNet.Tasks
 {
     internal abstract class MessageReadTask : WorkerTask
     {
-        public MNetRawMessage? Message { get; }
+        public MNetRawMessage? Message { get; protected set; }
     }
 }

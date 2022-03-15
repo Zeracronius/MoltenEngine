@@ -24,13 +24,13 @@ namespace Molten.Net.MNet.Tasks
         private Socket? _connection;
         private ThreadedQueue<byte[]>? _buffers;
 
-        public MNetRawMessage? Message { get; private set; }
-
         protected override bool OnRun()
         {
+            if (_connection == null)
+                return false;
+
             _connection.Blocking = true;
             EndPoint remoteEndpoint = _connection.RemoteEndPoint;
-
             Queue<byte[]> filled = new Queue<byte[]>();
             int bytesRecieved = 0;
             int totalBytes = 0;
@@ -82,12 +82,16 @@ namespace Molten.Net.MNet.Tasks
                 _buffers.Enqueue(buffer);
             }
 
-            IPEndPoint remoteIP = _connection.RemoteEndPoint as IPEndPoint;
+            IPEndPoint remoteIP = (IPEndPoint)remoteEndpoint;
             Message = new MNetRawMessage(messagePrefix, data, remoteIP.Address);
 
             _connection.Dispose();
-            _pool.Recycle(this);
             return true;
+        }
+
+        protected override void OnFree()
+        {
+            _pool.Recycle(this);
         }
 
         public void ClearForPool()
