@@ -69,6 +69,7 @@ namespace Molten.Net.MNet
         {
             TCPSocket.Dispose();
             UDPSocket.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

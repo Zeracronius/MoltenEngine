@@ -12,7 +12,7 @@ namespace Molten.Net
     public abstract class NetworkService : EngineService
     {
         protected readonly ThreadedQueue<INetworkMessage> _inbox;
-        protected readonly ThreadedQueue<(INetworkMessage, INetworkConnection[])> _outbox;
+        protected readonly ThreadedQueue<(INetworkMessage, INetworkConnection[]?)> _outbox;
 
         /// <summary>
         /// Gets the network identifier of the current network service.
@@ -21,9 +21,8 @@ namespace Molten.Net
 
         public NetworkService()
         {
-            Log = Logger.Get();
             _inbox = new ThreadedQueue<INetworkMessage>();
-            _outbox = new ThreadedQueue<(INetworkMessage, INetworkConnection[])>();
+            _outbox = new ThreadedQueue<(INetworkMessage, INetworkConnection[]?)>();
         }
 
 
@@ -35,9 +34,9 @@ namespace Molten.Net
         /// </summary>
         /// <param name="message"></param>
         /// <param name="recipients">Collection of connections to send the message to, broadcast if null.</param>
-        public void SendMessage(INetworkMessage message, IEnumerable<INetworkConnection> recipients = null)
+        public void SendMessage(INetworkMessage message, IEnumerable<INetworkConnection>? recipients = null)
         {
-            _outbox.Enqueue(new ValueTuple<INetworkMessage, INetworkConnection[]>(message, recipients?.ToArray()));
+            _outbox.Enqueue(new ValueTuple<INetworkMessage, INetworkConnection[]?>(message, recipients?.ToArray()));
         }
 
         /// <summary>
@@ -53,7 +52,7 @@ namespace Molten.Net
 
         public abstract IEnumerable<INetworkConnection> GetConnections();
 
-        public abstract INetworkConnection Connect(string host, int port, byte[] data = null);
+        public abstract INetworkConnection Connect(string host, int port, byte[]? data = null);
 
         #endregion
 
@@ -82,8 +81,6 @@ namespace Molten.Net
             _outbox.Clear();
             Log.Dispose();
         }
-
-        protected internal Logger Log { get; }
 
         #endregion
 

@@ -12,9 +12,9 @@ namespace Molten.Net.Message
         public int Channel { get; }
         public DeliveryMethod DeliveryMethod { get; }
         public ulong PacketId { get; }
-        public INetworkConnection Connection { get; }
+        public INetworkConnection? Connection { get; }
 
-        public NetworkMessage(byte[] data, ulong packetId, DeliveryMethod deliveryMethod, int channel, INetworkConnection connection)
+        public NetworkMessage(byte[] data, ulong packetId, DeliveryMethod deliveryMethod, int channel, INetworkConnection? connection)
         {
             Data = data;
             Channel = channel;

@@ -12,7 +12,7 @@ namespace Molten.Net.MNet.Tasks
 {
     internal class ReadTcpTask : MessageReadTask, IPoolable
     {
-        static ObjectPool<ReadTcpTask> _pool = new ObjectPool<ReadTcpTask>(() => new ReadTcpTask());
+        static readonly ObjectPool<ReadTcpTask> _pool = new ObjectPool<ReadTcpTask>(() => new ReadTcpTask());
         internal static ReadTcpTask Get(ThreadedQueue<byte[]> buffers, Socket connection)
         {
             ReadTcpTask task = _pool.GetInstance();
@@ -26,11 +26,11 @@ namespace Molten.Net.MNet.Tasks
 
         protected override bool OnRun()
         {
-            if (_connection == null)
+            if (_connection == null || _buffers == null)
                 return false;
 
             _connection.Blocking = true;
-            EndPoint remoteEndpoint = _connection.RemoteEndPoint;
+            EndPoint remoteEndpoint = _connection.RemoteEndPoint!;
             Queue<byte[]> filled = new Queue<byte[]>();
             int bytesRecieved = 0;
             int totalBytes = 0;

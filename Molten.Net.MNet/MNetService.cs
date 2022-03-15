@@ -14,9 +14,9 @@ namespace Molten.Net.MNet
 {
     public class MNetService : NetworkService
     {
-        private List<MNetConnection> _connections;
-        private DataWriter _dataWriter;
-        private MNetListener _listener;
+        private readonly List<MNetConnection> _connections;
+        private readonly DataWriter _dataWriter;
+        private readonly MNetListener _listener;
 
 
         public MNetService()
@@ -34,7 +34,7 @@ namespace Molten.Net.MNet
             _listener.Initialize(Thread.Manager, localAddress, Settings.Network.Port);
         }
 
-        public override INetworkConnection Connect(string host, int port, byte[] data = null)
+        public override INetworkConnection Connect(string host, int port, byte[]? data = null)
         {
             MNetConnection connection = new MNetConnection(host, port);
             connection.Status = ConnectionStatus.InitiatedConnect;
@@ -57,7 +57,7 @@ namespace Molten.Net.MNet
         protected override void OnUpdate(Timing time)
         {
             // Handle outgoing.
-            while (_outbox.TryDequeue(out (INetworkMessage, INetworkConnection[]) message))
+            while (_outbox.TryDequeue(out (INetworkMessage, INetworkConnection[]?) message))
                 Send(message.Item1, message.Item2?.Cast<MNetConnection>() ?? _connections);
 
             ProcessRecieved();
@@ -70,7 +70,7 @@ namespace Molten.Net.MNet
                 // Process new messages based on transmission method.
 
                 // Identify existing source connection.
-                MNetConnection sourceConnection = _connections.FirstOrDefault(x =>
+                MNetConnection? sourceConnection = _connections.FirstOrDefault(x =>
                 {
                     // Compare directly if possible
                     if (x.Endpoint.Address.Equals(rawMessage.Address))
@@ -79,7 +79,7 @@ namespace Molten.Net.MNet
                     // If client connection is IPv6 then compare using that.
                     if (x.Endpoint.Address.AddressFamily == AddressFamily.InterNetworkV6)
                         return x.Endpoint.Address.Equals(rawMessage.Address.MapToIPv6());
-                    
+
                     // Default to IPv4
                     return x.Endpoint.Address.Equals(rawMessage.Address.MapToIPv4());
                 });
@@ -226,7 +226,7 @@ namespace Molten.Net.MNet
 
         private void TCPDataSent(IAsyncResult result)
         {
-            MNetConnection connection = result.AsyncState as MNetConnection;
+            MNetConnection connection = (MNetConnection)result.AsyncState!;
             int sentBytes = connection.TCPSocket.EndSend(result);
 
             var e = new SocketAsyncEventArgs()
@@ -239,9 +239,9 @@ namespace Molten.Net.MNet
             Log.Debug($"[MNet][TCP] Sent {sentBytes} bytes to {connection.Host}");
         }
 
-        private void TCPConnectionDisconnected(object sender, SocketAsyncEventArgs e)
+        private void TCPConnectionDisconnected(object? sender, SocketAsyncEventArgs e)
         {
-            (e.UserToken as MNetConnection).TCPWaitHandle.Set();
+            ((MNetConnection)e.UserToken!).TCPWaitHandle.Set();
         }
 
         private void SendUDP(byte[] data, MNetConnection connection)
@@ -262,7 +262,7 @@ namespace Molten.Net.MNet
 
         private void UDPPacketSent(IAsyncResult result)
         {
-            MNetConnection connection = result.AsyncState as MNetConnection;
+            MNetConnection connection = (MNetConnection)result.AsyncState!;
             int sentBytes = connection.UDPSocket.EndSendTo(result);
             Log.Debug($"[MNet][UDP] Sent {sentBytes} bytes to {connection.Host}");
             connection.UDPWaitHandle.Set();

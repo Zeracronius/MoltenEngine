@@ -11,8 +11,6 @@ namespace Molten.Samples
 {
     public abstract class NetSampleGame<T> : SampleGame where T : NetworkService, new()
     {
-        SceneObject _player; 
-
         public NetSampleGame(string title) : base($"Networked " + title) { }
 
 

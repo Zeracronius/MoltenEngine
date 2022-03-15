@@ -14,22 +14,22 @@ namespace Molten.Net.MNet
 {
     internal class MNetListener : IDisposable
     {
-        public string Identity { get; private set; }
-
-        public int Port { get; private set; }
-        public IPAddress LocalAddress { get; private set; }
-        public ThreadedQueue<MNetRawMessage> Inbox { get; }
-
-        private Socket _tcpListener;
-        private Socket _udpListener;
+        private readonly Socket _tcpListener;
+        private readonly Socket _udpListener;
+        private readonly ThreadedQueue<byte[]> _buffers;
 
         private EndPoint _udpEndpoint;
 
-        private ThreadedQueue<byte[]> _buffers;
-        private EngineThread _tcpListeningThread;
-        private EngineThread _udpListeningThread;
+        private EngineThread? _tcpListeningThread;
+        private EngineThread? _udpListeningThread;
 
-        private WorkerGroup _workerGroup;
+        private WorkerGroup? _workerGroup;
+
+        public string Identity { get; private set; }
+        public int Port { get; private set; }
+        public IPAddress? LocalAddress { get; private set; }
+
+        public ThreadedQueue<MNetRawMessage> Inbox { get; }
 
         public MNetListener()
         {
@@ -43,6 +43,8 @@ namespace Molten.Net.MNet
             _tcpListener.Blocking = false;
 
             Inbox = new ThreadedQueue<MNetRawMessage>();
+
+            Identity = "Uninitialized";
         }
 
         public void Initialize(ThreadManager threading, IPAddress localAddress, int port)
@@ -72,7 +74,7 @@ namespace Molten.Net.MNet
 
               WorkerTask task = Tasks.ReadTcpTask.Get(_buffers, connection);
               task.OnCompleted += MessageTask_OnCompleted;
-              _workerGroup.QueueTask(task);
+              _workerGroup!.QueueTask(task);
             }
         }
 
@@ -115,8 +117,8 @@ namespace Molten.Net.MNet
 
         public void Dispose()
         {
-            _tcpListeningThread.DisposeAndJoin();
-            _udpListeningThread.DisposeAndJoin();
+            _tcpListeningThread?.DisposeAndJoin();
+            _udpListeningThread?.DisposeAndJoin();
         }
     }
 }
